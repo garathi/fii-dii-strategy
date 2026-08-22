@@ -158,6 +158,23 @@ wss.on('connection', (ws) => {
   ws.on('close', () => clearInterval(interval));
 });
 
+// =========================================================================
+// ON-STARTUP AUTO FETCH FUNCTION
+// Executes immediately whenever Render server boots up or wakes from sleep!
+// =========================================================================
+async function runStartupAutoFetch() {
+  console.log('\n🚀 [SERVER STARTUP AUTO-FETCH]: Running immediate data sync on boot...');
+  try {
+    const data = await getFiiDiiToday();
+    console.log(`✓ [STARTUP SYNC COMPLETE]: FII Net: ₹${data.today.fii.netValue} Cr | DII Net: ₹${data.today.dii.netValue} Cr`);
+    const analysis = analyzeFiiDiiSentiment(data.today);
+    console.log(`✓ [STARTUP STRATEGY READY]: ${analysis.recommendedStrategy.name} (${analysis.recommendedStrategy.recommendedLots} Lots)`);
+  } catch (err) {
+    console.error('⚠️ Startup sync error:', err.message);
+  }
+}
+
+// Scheduled Cron Jobs for active server sessions
 cron.schedule('30 17 * * 1-5', async () => {
   console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE FII/DII Cash Data at 5:30 PM IST...');
   try {
@@ -178,4 +195,6 @@ cron.schedule('30 18 * * 1-5', async () => {
 
 server.listen(PORT, () => {
   console.log(`🚀 FII/DII Automated Server running on port ${PORT}`);
+  // TRIGGER IMMEDIATE STARTUP AUTO-FETCH!
+  runStartupAutoFetch();
 });
