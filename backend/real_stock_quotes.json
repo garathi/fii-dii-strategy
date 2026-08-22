@@ -1,0 +1,110 @@
+[
+  {
+    "symbol": "HDFCBANK",
+    "name": "HDFC Bank Ltd",
+    "sector": "Banking & Financials",
+    "cmp": 726.95,
+    "prevClose": 729.0,
+    "changePct": -0.28,
+    "fiiHoldingPct": 32.1,
+    "diiHoldingPct": 33.4,
+    "high52": 1020.5,
+    "low52": 715.1
+  },
+  {
+    "symbol": "RELIANCE",
+    "name": "Reliance Industries Ltd",
+    "sector": "Energy & Conglomerate",
+    "cmp": 1316.0,
+    "prevClose": 1316.0,
+    "changePct": 0.0,
+    "fiiHoldingPct": 22.4,
+    "diiHoldingPct": 16.8,
+    "high52": 1611.8,
+    "low52": 1249.8
+  },
+  {
+    "symbol": "ICICIBANK",
+    "name": "ICICI Bank Ltd",
+    "sector": "Banking & Financials",
+    "cmp": 1420.0,
+    "prevClose": 1415.3,
+    "changePct": 0.33,
+    "fiiHoldingPct": 44.2,
+    "diiHoldingPct": 45.1,
+    "high52": 1480.0,
+    "low52": 1187.6
+  },
+  {
+    "symbol": "INFY",
+    "name": "Infosys Ltd",
+    "sector": "Information Technology",
+    "cmp": 1121.0,
+    "prevClose": 1139.9,
+    "changePct": -1.66,
+    "fiiHoldingPct": 33.6,
+    "diiHoldingPct": 35.8,
+    "high52": 1728.0,
+    "low52": 982.4
+  },
+  {
+    "symbol": "TCS",
+    "name": "Tata Consultancy Services",
+    "sector": "Information Technology",
+    "cmp": 2302.0,
+    "prevClose": 2313.2,
+    "changePct": -0.48,
+    "fiiHoldingPct": 12.5,
+    "diiHoldingPct": 10.6,
+    "high52": 3350.0,
+    "low52": 1976.8
+  },
+  {
+    "symbol": "SBIN",
+    "name": "State Bank of India",
+    "sector": "Public Banking",
+    "cmp": 1048.7,
+    "prevClose": 1061.2,
+    "changePct": -1.18,
+    "fiiHoldingPct": 11.1,
+    "diiHoldingPct": 24.8,
+    "high52": 1234.7,
+    "low52": 798.5
+  },
+  {
+    "symbol": "BHARTIARTL",
+    "name": "Bharti Airtel Ltd",
+    "sector": "Telecom",
+    "cmp": 1946.0,
+    "prevClose": 1969.3,
+    "changePct": -1.18,
+    "fiiHoldingPct": 25.8,
+    "diiHoldingPct": 19.9,
+    "high52": 2174.5,
+    "low52": 1740.5
+  },
+  {
+    "symbol": "LT",
+    "name": "Larsen & Toubro Ltd",
+    "sector": "Capital Goods & Infra",
+    "cmp": 4093.0,
+    "prevClose": 4086.7,
+    "changePct": 0.15,
+    "fiiHoldingPct": 24.3,
+    "diiHoldingPct": 37.5,
+    "high52": 4440.0,
+    "low52": 3288.1
+  },
+  {
+    "symbol": "AXISBANK",
+    "name": "Axis Bank Ltd",
+    "sector": "Banking & Financials",
+    "cmp": 1245.8,
+    "prevClose": 1227.3,
+    "changePct": 1.51,
+    "fiiHoldingPct": 53.8,
+    "diiHoldingPct": 28.9,
+    "high52": 1418.3,
+    "low52": 1042.5
+  }
+]

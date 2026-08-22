@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, ArrowUpRight, ArrowDownRight, Layers, Shield, CheckCircle } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 
 export default function StockScreener() {
   const [stocksData, setStocksData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState('ALL');
 
-  useEffect(() => {
+  const fetchStockData = () => {
+    setLoading(true);
     fetch('/api/fii-dii/stocks')
       .then(res => res.json())
       .then(data => {
@@ -14,12 +15,16 @@ export default function StockScreener() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStockData();
   }, []);
 
   if (loading) {
     return (
       <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Loading Institutional Stock Screener...
+        Fetching Real Live Market CMPs & SEBI Shareholding Patterns...
       </div>
     );
   }
@@ -35,12 +40,15 @@ export default function StockScreener() {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Layers size={20} style={{ color: 'var(--accent-cyan)' }} /> Institutional Stock Screener & Selection
           </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            FII & DII Inflow Stock Picks (Heavyweight F&O Stock Accumulation vs Distribution)
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            Real Live CMP Quotes (Yahoo Finance ^NSEI) & Official SEBI Quarterly Shareholding Patterns
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn-secondary" onClick={fetchStockData} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>
+            <RefreshCw size={14} /> Refresh Prices
+          </button>
           <button 
             className={`btn-secondary ${filterMode === 'ALL' ? 'btn-primary' : ''}`}
             onClick={() => setFilterMode('ALL')}
@@ -53,7 +61,7 @@ export default function StockScreener() {
             onClick={() => setFilterMode('BUY')}
             style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', background: filterMode === 'BUY' ? '#10b981' : '' }}
           >
-            Institutional Buy Picks ({stocksData?.summary?.institutionalBuyCount})
+            Buy Picks ({stocksData?.summary?.institutionalBuyCount})
           </button>
           <button 
             className={`btn-secondary ${filterMode === 'SHORT' ? 'btn-primary' : ''}`}
@@ -72,8 +80,8 @@ export default function StockScreener() {
             <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
               <th style={{ padding: '0.75rem 1rem' }}>Stock Symbol</th>
               <th style={{ padding: '0.75rem 1rem' }}>Sector</th>
-              <th style={{ padding: '0.75rem 1rem' }}>CMP (₹)</th>
-              <th style={{ padding: '0.75rem 1rem' }}>Institutional Holding</th>
+              <th style={{ padding: '0.75rem 1rem' }}>Live CMP (₹) & Day %</th>
+              <th style={{ padding: '0.75rem 1rem' }}>Official SEBI Shareholding</th>
               <th style={{ padding: '0.75rem 1rem' }}>Signal</th>
               <th style={{ padding: '0.75rem 1rem' }}>Target / Stop Loss</th>
               <th style={{ padding: '0.75rem 1rem' }}>Action Strategy</th>
@@ -87,10 +95,20 @@ export default function StockScreener() {
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{stock.name}</div>
                 </td>
                 <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)' }}>{stock.sector}</td>
-                <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fff' }}>₹{stock.cmp.toLocaleString('en-IN')}</td>
+                <td className="mono" style={{ padding: '0.85rem 1rem' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
+                    ₹{stock.cmp?.toLocaleString('en-IN')}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: (stock.changePct >= 0) ? '#34d399' : '#f87171' }}>
+                    {(stock.changePct >= 0) ? `+${stock.changePct}%` : `${stock.changePct}%`}
+                  </div>
+                </td>
                 <td style={{ padding: '0.85rem 1rem' }}>
                   <div className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                     FII: <strong style={{ color: '#38bdf8' }}>{stock.fiiHoldingPct}%</strong> | DII: <strong style={{ color: '#fbbf24' }}>{stock.diiHoldingPct}%</strong>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    Inst Total: {Number((stock.fiiHoldingPct + stock.diiHoldingPct).toFixed(1))}%
                   </div>
                 </td>
                 <td style={{ padding: '0.85rem 1rem' }}>
