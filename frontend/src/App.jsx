@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers } from 'lucide-react';
+import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award } from 'lucide-react';
 import SentimentGauge from './components/SentimentGauge';
 import FiiDiiChart from './components/FiiDiiChart';
 import StrategyCards from './components/StrategyCards';
 import BacktestSimulator from './components/BacktestSimulator';
 import AutomationConfig from './components/AutomationConfig';
 import StockScreener from './components/StockScreener';
+import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -99,7 +100,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Institutional Market Sentiment & Stock Selection Screener
+              Institutional Market Sentiment & Rohan Mehta ATH Growth Strategy
             </p>
           </div>
         </div>
@@ -125,11 +126,18 @@ export default function App() {
           <BarChart2 size={16} /> Live Dashboard
         </button>
         <button
+          className={`btn-secondary ${activeTab === 'rohan' ? 'btn-primary' : ''}`}
+          onClick={() => setActiveTab('rohan')}
+          style={{ background: activeTab === 'rohan' ? 'linear-gradient(135deg, #8b5cf6, #ec4899)' : '' }}
+        >
+          <Award size={16} /> Rohan Mehta ATH Strategy
+        </button>
+        <button
           className={`btn-secondary ${activeTab === 'stocks' ? 'btn-primary' : ''}`}
           onClick={() => setActiveTab('stocks')}
           style={{ background: activeTab === 'stocks' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
         >
-          <Layers size={16} /> Stock Screener
+          <Layers size={16} /> Nifty 500 Screener
         </button>
         <button
           className={`btn-secondary ${activeTab === 'backtest' ? 'btn-primary' : ''}`}
@@ -167,6 +175,11 @@ export default function App() {
             isTriggering={isTriggering}
           />
         </>
+      )}
+
+      {/* Rohan Mehta ATH Strategy Tab */}
+      {activeTab === 'rohan' && (
+        <RohanMehtaAthStrategy />
       )}
 
       {/* Stock Screener Tab */}

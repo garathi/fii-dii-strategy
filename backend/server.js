@@ -10,6 +10,7 @@ const { analyzeFiiDiiSentiment } = require('./services/strategyEngine');
 const { triggerSignalAlert, getExecutedTrades } = require('./services/alertNotifier');
 const { runRealBacktest, getRealNiftyHistory } = require('./services/backtestEngine');
 const { screenInstitutionalStocks } = require('./services/stockScreenerEngine');
+const { screenRohanMehtaAthStrategy } = require('./services/rohanMehtaAthEngine');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -95,7 +96,7 @@ app.post('/api/backtest', (req, res) => {
   }
 });
 
-// 6. Institutional Stock Screener API (FII/DII Stock Selection)
+// 6. Nifty 500 High-Growth Institutional Stock Screener API
 app.get('/api/fii-dii/stocks', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -106,7 +107,17 @@ app.get('/api/fii-dii/stocks', async (req, res) => {
   }
 });
 
-// 7. Settings REST API
+// 7. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
+app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
+  try {
+    const result = screenRohanMehtaAthStrategy();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. Settings REST API
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, settings: userSettings });
 });
@@ -147,27 +158,21 @@ wss.on('connection', (ws) => {
   ws.on('close', () => clearInterval(interval));
 });
 
-// Automated Daily Scheduler (Wakes up at 5:30 PM & 6:30 PM IST on Trading Days)
 cron.schedule('30 17 * * 1-5', async () => {
   console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE FII/DII Cash Data at 5:30 PM IST...');
   try {
     const data = await getFiiDiiToday();
     const analysis = analyzeFiiDiiSentiment(data.today);
-    console.log(`✓ Daily Fetch Successful | Date: ${data.today.date} | FII: ${data.today.fii.netValue} Cr | DII: ${data.today.dii.netValue} Cr`);
-    
     if (userSettings.autoTradingEnabled) {
       await triggerSignalAlert(analysis, userSettings);
     }
-  } catch (e) {
-    console.error('Cron job error:', e.message);
-  }
+  } catch (e) {}
 });
 
 cron.schedule('30 18 * * 1-5', async () => {
   console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE Participant OI Data at 6:30 PM IST...');
   try {
     await getFiiDiiToday();
-    console.log('✓ Participant OI Data Updated Successfully.');
   } catch (e) {}
 });
 
