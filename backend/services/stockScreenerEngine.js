@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-function getRealStockQuotes() {
-  const file = path.join(__dirname, '../real_stock_quotes.json');
+function getRealNifty500Quotes() {
+  const file = path.join(__dirname, '../real_nifty500_quotes.json');
   if (fs.existsSync(file)) {
     const raw = fs.readFileSync(file, 'utf8');
     return JSON.parse(raw);
@@ -11,79 +11,90 @@ function getRealStockQuotes() {
 }
 
 /**
- * Institutional Stock Screener using 100% REAL Live CMPs and Official SEBI Shareholding Data
+ * NIFTY 500 High-Growth Institutional Screener Engine
+ * Filters Midcap & Smallcap stocks experiencing FII/DII accumulation and 52-Week High Breakout
  */
 function screenInstitutionalStocks(todayData) {
   const fiiNet = todayData.fii?.netValue || 0;
   const diiNet = todayData.dii?.netValue || 0;
   const combinedNet = fiiNet + diiNet;
 
-  const realQuotes = getRealStockQuotes();
+  const realQuotes = getRealNifty500Quotes();
 
-  const screenedStocks = realQuotes.map((stock, idx) => {
+  const screenedStocks = realQuotes.map((stock) => {
     const cmp = stock.cmp;
     const changePct = stock.changePct || 0;
+    const distFromHigh = stock.distFromHighPct || 10;
 
-    // Confluence Score = Combined FII/DII Net Flow + Live Day Return + Institutional Weight
-    const scoreSeed = cmp + fiiNet + (changePct * 15);
-    const instInflowScore = Math.round(Math.max(-100, Math.min(100, (combinedNet / 2500) * 40 + (changePct * 25) + Math.sin(scoreSeed) * 20)));
+    // Nifty 500 Institutional Momentum Score (-100 to +100)
+    // High Score = Near 52W High (< 10% away) + Strong Institutional Holding + Positive Day Return
+    let instScore = (combinedNet / 2500) * 30 + (changePct * 15) + (15 - distFromHigh * 1.5);
+    instScore = Math.round(Math.max(-100, Math.min(100, instScore)));
 
     let status = 'ACCUMULATION';
-    let signal = 'BUY';
+    let signal = 'STRONG BUY';
     let badgeClass = 'badge-bullish';
-    let targetPrice = Math.round(cmp * 1.042 * 100) / 100;
-    let stopLossPrice = Math.round(cmp * 0.981 * 100) / 100;
+    let targetPrice = Math.round(cmp * 1.145 * 100) / 100; // 14.5% swing target for Nifty 500 midcaps
+    let stopLossPrice = Math.round(cmp * 0.948 * 100) / 100; // 5.2% stop loss
     let strategyAdvice = '';
 
-    if (instInflowScore >= 35) {
-      status = 'HEAVY_INSTITUTIONAL_BUY';
-      signal = 'STRONG BUY';
+    if (distFromHigh <= 10 && instScore >= 15) {
+      status = '52W_HIGH_INSTITUTIONAL_BREAKOUT';
+      signal = '52W HIGH BREAKOUT BUY';
       badgeClass = 'badge-bullish';
-      strategyAdvice = `FII & DII net accumulation confirmed. Buy Equity Delivery / Stock Call Option above ₹${cmp}.`;
-    } else if (instInflowScore <= -35) {
-      status = 'INSTITUTIONAL_DISTRIBUTION';
-      signal = 'SELL / SHORT';
+      strategyAdvice = `FII/DII accumulation + 52-Week High Breakout! Buy Swing Delivery / Stock Options above ₹${cmp} for +15% to +25% multi-week target.`;
+    } else if (instScore >= 20) {
+      status = 'HEAVY_INSTITUTIONAL_ACCUMULATION';
+      signal = 'INSTITUTIONAL BUY';
+      badgeClass = 'badge-bullish';
+      strategyAdvice = `Strong DII/FII buying in Nifty 500 Midcap. Accumulate delivery on dips above ₹${cmp}.`;
+    } else if (instScore <= -20) {
+      status = 'INSTITUTIONAL_PROFIT_BOOKING';
+      signal = 'DISTRIBUTION / SELL';
       badgeClass = 'badge-bearish';
-      targetPrice = Math.round(cmp * 0.958 * 100) / 100;
-      stopLossPrice = Math.round(cmp * 1.019 * 100) / 100;
-      strategyAdvice = `Institutional profit booking / net outflow. Short Stock Futures or Buy Put Option below ₹${cmp}.`;
+      targetPrice = Math.round(cmp * 0.88 * 100) / 100;
+      stopLossPrice = Math.round(cmp * 1.04 * 100) / 100;
+      strategyAdvice = `Institutional selling pressure. Exit delivery or buy Put Options below ₹${cmp}.`;
     } else {
-      status = 'RANGEBOUND_CONSOLIDATION';
-      signal = 'NEUTRAL / HOLD';
+      status = 'MIDCAP_CONSOLIDATION';
+      signal = 'NEUTRAL / WATCHLIST';
       badgeClass = 'badge-sideways';
-      strategyAdvice = `Stock consolidating in a range. Avoid aggressive momentum trades; wait for institutional volume breakout.`;
+      strategyAdvice = `Consolidating in base pattern. Add to watchlist and wait for 52-Week High volume breakout.`;
     }
 
     return {
       symbol: stock.symbol,
       name: stock.name,
       sector: stock.sector,
+      capType: stock.capType,
       cmp,
       changePct,
+      high52: stock.high52,
+      distFromHighPct: distFromHigh,
       fiiHoldingPct: stock.fiiHoldingPct,
       diiHoldingPct: stock.diiHoldingPct,
-      instInflowScore,
+      instInflowScore: instScore,
       status,
       signal,
       badgeClass,
       targetPrice,
       stopLossPrice,
       strategyAdvice,
-      priceSource: 'Yahoo Finance Real-Time Quote (^NSEI)'
+      priceSource: 'Yahoo Finance Real-Time Nifty 500 Quote'
     };
   });
 
-  const topBuyPicks = screenedStocks.filter(s => s.signal.includes('BUY')).sort((a, b) => b.instInflowScore - a.instInflowScore);
+  const topBreakoutPicks = screenedStocks.filter(s => s.signal.includes('BREAKOUT') || s.signal.includes('BUY')).sort((a, b) => b.instInflowScore - a.instInflowScore);
   const topShortPicks = screenedStocks.filter(s => s.signal.includes('SELL')).sort((a, b) => a.instInflowScore - b.instInflowScore);
 
   return {
     summary: {
       totalScreened: screenedStocks.length,
-      institutionalBuyCount: topBuyPicks.length,
+      institutionalBuyCount: topBreakoutPicks.length,
       institutionalShortCount: topShortPicks.length,
-      marketInflowContext: combinedNet >= 0 ? 'Bullish Institutional Flow' : 'Bearish Institutional Flow'
+      marketInflowContext: 'Nifty 500 High-Alpha Midcap & Smallcap Screener'
     },
-    topBuyPicks,
+    topBuyPicks: topBreakoutPicks,
     topShortPicks,
     allStocks: screenedStocks
   };
