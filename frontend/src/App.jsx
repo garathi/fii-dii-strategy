@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award } from 'lucide-react';
+import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award, ShieldCheck } from 'lucide-react';
 import SentimentGauge from './components/SentimentGauge';
 import FiiDiiChart from './components/FiiDiiChart';
 import StrategyCards from './components/StrategyCards';
@@ -8,6 +8,7 @@ import AutomationConfig from './components/AutomationConfig';
 import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
 import ActivePositionTracker from './components/ActivePositionTracker';
+import InstitutionalRatioStrategy from './components/InstitutionalRatioStrategy';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -34,7 +35,6 @@ export default function App() {
       if (logsRes.success) setTradeLogs(logsRes.trades);
       if (settingsRes.success) setSettings(settingsRes.settings);
       
-      // Increment refreshKey to trigger child component live rate refetches
       setRefreshKey(prev => prev + 1);
     } catch (err) {
       console.error('Error fetching FII/DII data:', err);
@@ -122,13 +122,20 @@ export default function App() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+      <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <button
           className={`btn-secondary ${activeTab === 'dashboard' ? 'btn-primary' : ''}`}
           onClick={() => setActiveTab('dashboard')}
           style={{ background: activeTab === 'dashboard' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
         >
           <BarChart2 size={16} /> Live Dashboard
+        </button>
+        <button
+          className={`btn-secondary ${activeTab === 'ratio' ? 'btn-primary' : ''}`}
+          onClick={() => setActiveTab('ratio')}
+          style={{ background: activeTab === 'ratio' ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : '' }}
+        >
+          <ShieldCheck size={16} /> 1:2 Institutional Ratio
         </button>
         <button
           className={`btn-secondary ${activeTab === 'rohan' ? 'btn-primary' : ''}`}
@@ -182,6 +189,11 @@ export default function App() {
             isTriggering={isTriggering}
           />
         </>
+      )}
+
+      {/* Dedicated 1:2 Ratio Strategy Tab */}
+      {activeTab === 'ratio' && (
+        <InstitutionalRatioStrategy key={`ratio-${refreshKey}`} />
       )}
 
       {/* Rohan Mehta ATH Strategy Tab */}
