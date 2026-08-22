@@ -17,6 +17,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isTriggering, setIsTriggering] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchData = async () => {
     setLoading(true);
@@ -32,6 +33,9 @@ export default function App() {
       if (historyRes.success) setHistoryData(historyRes.history);
       if (logsRes.success) setTradeLogs(logsRes.trades);
       if (settingsRes.success) setSettings(settingsRes.settings);
+      
+      // Increment refreshKey to trigger child component live rate refetches
+      setRefreshKey(prev => prev + 1);
     } catch (err) {
       console.error('Error fetching FII/DII data:', err);
     } finally {
@@ -101,7 +105,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              1:2 Institutional Ratio Tracker & Rohan Mehta ATH Screener
+              1:2 Institutional Ratio Tracker & Real-Time Rate Updates
             </p>
           </div>
         </div>
@@ -111,8 +115,8 @@ export default function App() {
             <span className="live-pulse"></span>
             NSE Market Feed: <strong style={{ color: '#34d399' }}>Active</strong>
           </div>
-          <button className="btn-secondary" onClick={fetchData} disabled={loading}>
-            <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh
+          <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ background: 'var(--accent-cyan)', color: '#000', fontWeight: 700 }}>
+            <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh All Rates
           </button>
         </div>
       </header>
@@ -159,7 +163,7 @@ export default function App() {
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && (
         <>
-          <ActivePositionTracker />
+          <ActivePositionTracker key={`pos-${refreshKey}`} />
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <SentimentGauge
@@ -182,12 +186,12 @@ export default function App() {
 
       {/* Rohan Mehta ATH Strategy Tab */}
       {activeTab === 'rohan' && (
-        <RohanMehtaAthStrategy />
+        <RohanMehtaAthStrategy key={`rohan-${refreshKey}`} />
       )}
 
       {/* Stock Screener Tab */}
       {activeTab === 'stocks' && (
-        <StockScreener />
+        <StockScreener key={`stocks-${refreshKey}`} />
       )}
 
       {/* Backtest Simulator Tab */}
