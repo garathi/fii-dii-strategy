@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, ShieldCheck } from 'lucide-react';
+import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers } from 'lucide-react';
 import SentimentGauge from './components/SentimentGauge';
 import FiiDiiChart from './components/FiiDiiChart';
 import StrategyCards from './components/StrategyCards';
 import BacktestSimulator from './components/BacktestSimulator';
 import AutomationConfig from './components/AutomationConfig';
+import StockScreener from './components/StockScreener';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -39,7 +40,6 @@ export default function App() {
   useEffect(() => {
     fetchData();
 
-    // WebSocket real-time subscription
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.hostname === 'localhost' ? 'localhost:5000' : window.location.host;
     const ws = new WebSocket(`${wsProtocol}//${wsHost}`);
@@ -62,7 +62,6 @@ export default function App() {
       const res = await fetch('/api/trigger-signal', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        // Refresh trade logs
         const logsRes = await fetch('/api/trade-log').then(r => r.json());
         if (logsRes.success) setTradeLogs(logsRes.trades);
       }
@@ -100,7 +99,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Institutional Market Sentiment Analysis & Algorithmic Options Trader
+              Institutional Market Sentiment & Stock Selection Screener
             </p>
           </div>
         </div>
@@ -124,6 +123,13 @@ export default function App() {
           style={{ background: activeTab === 'dashboard' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
         >
           <BarChart2 size={16} /> Live Dashboard
+        </button>
+        <button
+          className={`btn-secondary ${activeTab === 'stocks' ? 'btn-primary' : ''}`}
+          onClick={() => setActiveTab('stocks')}
+          style={{ background: activeTab === 'stocks' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
+        >
+          <Layers size={16} /> Stock Screener
         </button>
         <button
           className={`btn-secondary ${activeTab === 'backtest' ? 'btn-primary' : ''}`}
@@ -161,6 +167,11 @@ export default function App() {
             isTriggering={isTriggering}
           />
         </>
+      )}
+
+      {/* Stock Screener Tab */}
+      {activeTab === 'stocks' && (
+        <StockScreener />
       )}
 
       {/* Backtest Simulator Tab */}

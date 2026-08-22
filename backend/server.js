@@ -9,6 +9,7 @@ const { getFiiDiiToday, generateHistoricalData } = require('./services/nseScrape
 const { analyzeFiiDiiSentiment } = require('./services/strategyEngine');
 const { triggerSignalAlert, getExecutedTrades } = require('./services/alertNotifier');
 const { runRealBacktest, getRealNiftyHistory } = require('./services/backtestEngine');
+const { screenInstitutionalStocks } = require('./services/stockScreenerEngine');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -94,7 +95,18 @@ app.post('/api/backtest', (req, res) => {
   }
 });
 
-// 6. Settings REST API
+// 6. Institutional Stock Screener API (FII/DII Stock Selection)
+app.get('/api/fii-dii/stocks', async (req, res) => {
+  try {
+    const data = await getFiiDiiToday();
+    const stocksAnalysis = screenInstitutionalStocks(data.today);
+    res.json({ success: true, ...stocksAnalysis });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7. Settings REST API
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, settings: userSettings });
 });
@@ -135,10 +147,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => clearInterval(interval));
 });
 
-// =========================================================================
-// AUTOMATED DAILY SCHEDULER (Wakes up at 5:30 PM & 6:30 PM IST on Trading Days)
-// =========================================================================
-// Cron format: '30 17 * * 1-5' = 5:30 PM IST Monday-Friday
+// Automated Daily Scheduler (Wakes up at 5:30 PM & 6:30 PM IST on Trading Days)
 cron.schedule('30 17 * * 1-5', async () => {
   console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE FII/DII Cash Data at 5:30 PM IST...');
   try {
@@ -154,11 +163,10 @@ cron.schedule('30 17 * * 1-5', async () => {
   }
 });
 
-// Cron format: '30 18 * * 1-5' = 6:30 PM IST Monday-Friday (Participant OI Release)
 cron.schedule('30 18 * * 1-5', async () => {
   console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE Participant OI Data at 6:30 PM IST...');
   try {
-    const data = await getFiiDiiToday();
+    await getFiiDiiToday();
     console.log('✓ Participant OI Data Updated Successfully.');
   } catch (e) {}
 });
