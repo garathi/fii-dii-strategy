@@ -1,0 +1,128 @@
+[
+  {
+    "symbol": "BSE",
+    "name": "BSE Limited",
+    "sector": "Capital Markets",
+    "cmp": 3241.0,
+    "fiftyTwoHigh": 4446.8,
+    "distFromAthPct": 27.12,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "MCX",
+    "name": "Multi Commodity Exchange",
+    "sector": "Capital Markets",
+    "cmp": 3185.0,
+    "fiftyTwoHigh": 3480.0,
+    "distFromAthPct": 8.48,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "CDSL",
+    "name": "Central Depository Services",
+    "sector": "Capital Markets",
+    "cmp": 1388.9,
+    "fiftyTwoHigh": 1673.7,
+    "distFromAthPct": 17.02,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "BHARTIARTL",
+    "name": "Bharti Airtel Ltd",
+    "sector": "Telecom",
+    "cmp": 1946.0,
+    "fiftyTwoHigh": 2174.5,
+    "distFromAthPct": 10.51,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "POLICYBZR",
+    "name": "PB Fintech Ltd",
+    "sector": "Fintech",
+    "cmp": 1795.2,
+    "fiftyTwoHigh": 1974.0,
+    "distFromAthPct": 9.06,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "SOLARINDS",
+    "name": "Solar Industries India",
+    "sector": "Chemicals & Explosives",
+    "cmp": 19900.0,
+    "fiftyTwoHigh": 20422.0,
+    "distFromAthPct": 2.56,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "DIXON",
+    "name": "Dixon Technologies Ltd",
+    "sector": "EMS & Electronics",
+    "cmp": 14850.0,
+    "fiftyTwoHigh": 18471.0,
+    "distFromAthPct": 19.6,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "TRENT",
+    "name": "Trent Ltd",
+    "sector": "Retail",
+    "cmp": 2924.0,
+    "fiftyTwoHigh": 5674.0,
+    "distFromAthPct": 48.47,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "BEL",
+    "name": "Bharat Electronics Ltd",
+    "sector": "Defence",
+    "cmp": 414.0,
+    "fiftyTwoHigh": 473.45,
+    "distFromAthPct": 12.56,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "HAL",
+    "name": "Hindustan Aeronautics Ltd",
+    "sector": "Defence",
+    "cmp": 5000.0,
+    "fiftyTwoHigh": 5149.9,
+    "distFromAthPct": 2.91,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "POLYCAB",
+    "name": "Polycab India Ltd",
+    "sector": "Cables",
+    "cmp": 8966.0,
+    "fiftyTwoHigh": 10126.0,
+    "distFromAthPct": 11.46,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "TATAINVEST",
+    "name": "Tata Investment Corp",
+    "sector": "Finance",
+    "cmp": 647.95,
+    "fiftyTwoHigh": 1184.7,
+    "distFromAthPct": 45.31,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "PERSISTENT",
+    "name": "Persistent Systems",
+    "sector": "IT Services",
+    "cmp": 5667.5,
+    "fiftyTwoHigh": 6599.0,
+    "distFromAthPct": 14.12,
+    "isStrictAth": false
+  },
+  {
+    "symbol": "KAYNES",
+    "name": "Kaynes Technology",
+    "sector": "Electronics",
+    "cmp": 3890.0,
+    "fiftyTwoHigh": 7705.0,
+    "distFromAthPct": 49.51,
+    "isStrictAth": false
+  }
+]
