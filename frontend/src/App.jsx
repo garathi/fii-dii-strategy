@@ -7,7 +7,6 @@ import BacktestSimulator from './components/BacktestSimulator';
 import AutomationConfig from './components/AutomationConfig';
 import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
-import ActivePositionTracker from './components/ActivePositionTracker';
 import InstitutionalRatioStrategy from './components/InstitutionalRatioStrategy';
 
 export default function App() {
@@ -105,7 +104,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              1:2 Institutional Ratio Tracker & Real-Time Rate Updates
+              Institutional Market Sentiment & Quantitative Strategy Automation
             </p>
           </div>
         </div>
@@ -128,7 +127,7 @@ export default function App() {
           onClick={() => setActiveTab('dashboard')}
           style={{ background: activeTab === 'dashboard' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
         >
-          <BarChart2 size={16} /> Live Dashboard
+          <BarChart2 size={16} /> Live Dashboard (FII/DII Strategy)
         </button>
         <button
           className={`btn-secondary ${activeTab === 'ratio' ? 'btn-primary' : ''}`}
@@ -167,11 +166,9 @@ export default function App() {
         </button>
       </nav>
 
-      {/* Dashboard Tab */}
+      {/* Live Dashboard Tab: Pure FII/DII Strategy Recommendation */}
       {activeTab === 'dashboard' && (
         <>
-          <ActivePositionTracker key={`pos-${refreshKey}`} />
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <SentimentGauge
               analysis={todayData?.analysis}
