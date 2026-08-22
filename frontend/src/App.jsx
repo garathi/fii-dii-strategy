@@ -7,6 +7,7 @@ import BacktestSimulator from './components/BacktestSimulator';
 import AutomationConfig from './components/AutomationConfig';
 import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
+import ActivePositionTracker from './components/ActivePositionTracker';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -100,7 +101,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Institutional Market Sentiment & Rohan Mehta ATH Growth Strategy
+              1:2 Institutional Ratio Tracker & Rohan Mehta ATH Screener
             </p>
           </div>
         </div>
@@ -158,6 +159,8 @@ export default function App() {
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && (
         <>
+          <ActivePositionTracker />
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <SentimentGauge
               analysis={todayData?.analysis}
