@@ -110,7 +110,7 @@ export default function RohanMehtaAthStrategy() {
                       ₹{stock.cmp?.toLocaleString('en-IN')}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', color: '#fbbf24', fontWeight: 700 }}>
-                      ₹{stock.peakHigh?.toLocaleString('en-IN')}
+                      ₹{stock.peakAth?.toLocaleString('en-IN')}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', color: '#34d399', fontWeight: 700 }}>
                       🔥 {stock.distFromAthPct}% from ATH
