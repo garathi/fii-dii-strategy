@@ -67,7 +67,83 @@ function getExecutedTrades() {
   return executedTrades;
 }
 
+const path = require('path');
+const fs = require('fs');
+
+const STATE_FILE = path.join(__dirname, '..', 'alert_state.json');
+
+function getAlertState() {
+  if (fs.existsSync(STATE_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+    } catch (e) {
+      return { lastFiiSentiment: null, rohanMehtaPicks: [], tripleConfirmationPicks: [] };
+    }
+  }
+  return { lastFiiSentiment: null, rohanMehtaPicks: [], tripleConfirmationPicks: [] };
+}
+
+function saveAlertState(state) {
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+async function evaluateHourlyAlerts(fiiData, rohanData, tripleData, settings) {
+  const state = getAlertState();
+  const currentRohanPicks = (rohanData?.strictQualifiers || []).map(s => s.symbol);
+  const currentTriplePicks = (tripleData?.buySignals || []).map(s => s.symbol);
+  
+  const newRohanPicks = currentRohanPicks.filter(sym => !state.rohanMehtaPicks.includes(sym));
+  const newTriplePicks = currentTriplePicks.filter(sym => !state.tripleConfirmationPicks.includes(sym));
+  
+  const sentimentChanged = fiiData?.sentiment !== state.lastFiiSentiment;
+
+  // If nothing new, don't alert
+  if (!sentimentChanged && newRohanPicks.length === 0 && newTriplePicks.length === 0) {
+    console.log("⏰ [CRON]: No new strategies or stocks identified. Skipping Telegram alert to prevent spam.");
+    return false;
+  }
+
+  let msg = `🚨 *HOURLY MARKET SCAN UPDATE* 🚨\n\n`;
+
+  if (sentimentChanged) {
+    msg += `📊 *FII/DII Shift:*\n`;
+    msg += `New Sentiment: ${fiiData.sentiment} (Score: ${fiiData.sentimentScore})\n`;
+    msg += `FII Net: ₹${fiiData.fiiNet} Cr | DII Net: ₹${fiiData.diiNet} Cr\n\n`;
+  }
+
+  if (newRohanPicks.length > 0) {
+    msg += `🔥 *New Rohan Mehta ATH Additions:*\n`;
+    msg += newRohanPicks.join(', ') + `\n\n`;
+  }
+
+  if (newTriplePicks.length > 0) {
+    msg += `🎯 *New Triple Confirmation Additions:*\n`;
+    msg += newTriplePicks.join(', ') + `\n\n`;
+  }
+  
+  msg += `_View full details on your live dashboard._`;
+
+  if (settings.telegramWebhookUrl) {
+    try {
+      await axios.post(settings.telegramWebhookUrl, { text: msg, parse_mode: "Markdown" }, { timeout: 3000 });
+      console.log("⏰ [CRON]: Telegram alert sent successfully!");
+      
+      // Save new state
+      state.lastFiiSentiment = fiiData?.sentiment;
+      state.rohanMehtaPicks = [...new Set([...state.rohanMehtaPicks, ...newRohanPicks])];
+      state.tripleConfirmationPicks = [...new Set([...state.tripleConfirmationPicks, ...newTriplePicks])];
+      saveAlertState(state);
+      
+      return true;
+    } catch (e) {
+      console.error("⏰ [CRON]: Telegram webhook failed:", e.message);
+    }
+  }
+  return false;
+}
+
 module.exports = {
   triggerSignalAlert,
-  getExecutedTrades
+  getExecutedTrades,
+  evaluateHourlyAlerts
 };

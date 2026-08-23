@@ -53,7 +53,8 @@ if (fs.existsSync(frontendDist)) {
 
 let userSettings = {
   minFiiThreshold: 500, minDiiThreshold: 300, riskPerTradePct: 2,
-  telegramWebhookUrl: '', discordWebhookUrl: '', autoTradingEnabled: false
+  telegramWebhookUrl: 'https://api.telegram.org/bot8538329232:AAFyAR6ORgCY3RwLI__Ts5qb1cOUk_NqrNk/sendMessage?chat_id=874345004', 
+  discordWebhookUrl: '', autoTradingEnabled: false
 };
 
 const realScreenerPath = path.join(__dirname, 'real_nifty500_screener.json');
@@ -255,16 +256,23 @@ async function runStartupAutoFetch() {
   }
 }
 
-cron.schedule('30 17 * * 1-5', async () => {
-  console.log('⏰ [CRON]: Refreshing live market data at 5:30 PM...');
+cron.schedule('0 * * * *', async () => {
+  console.log('⏰ [CRON]: Hourly scan running (24/7)...');
   runPythonScript('fetch_real_live_quotes.py');
   runPythonScript('live_nifty500_screener.py');
+  runPythonScript('scan_inr_currency_triple.py');
   
   try {
     const data = await getFiiDiiToday();
     const sentimentAnalysis = analyzeFiiDiiSentiment(data.today);
-    console.log(`⏰ [CRON]: Analyzing market sentiment: ${sentimentAnalysis.sentiment}. Triggering automated alerts if configured...`);
-    await triggerSignalAlert(sentimentAnalysis, userSettings);
+    
+    // Fetch data from other strategy engines
+    const rohanData = screenRohanMehtaAthStrategy();
+    const tripleData = getTripleConfirmationSignals();
+    
+    console.log(`⏰ [CRON]: Evaluating new additions for alerts...`);
+    const { evaluateHourlyAlerts } = require('./services/alertNotifier');
+    await evaluateHourlyAlerts(sentimentAnalysis, rohanData, tripleData, userSettings);
   } catch (err) {
     console.error('Cron alert error:', err.message);
   }
