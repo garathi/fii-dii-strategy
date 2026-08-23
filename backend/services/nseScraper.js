@@ -58,8 +58,10 @@ function generateHistoricalData(days = 30) {
 
     history.push({
       date: d.toISOString().split('T')[0],
-      fiiNet: fiiNet,
-      diiNet: diiNet,
+      formattedDate: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+      fii: { netValue: fiiNet },
+      dii: { netValue: diiNet },
+      combinedNet: fiiNet + diiNet,
       niftyClose: Math.round(24252 + Math.sin(i) * 450)
     });
   }
