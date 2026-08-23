@@ -84,8 +84,9 @@ export default function StockScreener() {
               </thead>
               <tbody>
                 {stocks.map((stk, idx) => {
-                  const todayChange = stk.todayChangePct !== undefined ? stk.todayChangePct : 0.0;
-                  const distHigh = stk.distFromHighPct !== undefined ? stk.distFromHighPct : 0.0;
+                  // Use nullish coalescing to avoid falsy 0 being replaced by fallback
+                  const todayChange = stk.todayChangePct ?? stk.changePct ?? 0;
+                  const distHigh = stk.distFromHighPct ?? 0;
                   const isBullish = stk.signal && stk.signal.includes('BUY');
                   const prob = stk.probSuccess || (distHigh <= 3.0 ? 84.2 : distHigh <= 15.0 ? 76.5 : 71.0);
 

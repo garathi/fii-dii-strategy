@@ -4,12 +4,13 @@ const http = require('http');
 const path = require('path');
 const WebSocket = require('ws');
 const cron = require('node-cron');
+const { execSync } = require('child_process');
+const fs = require('fs');
 
 const { getFiiDiiToday, generateHistoricalData } = require('./services/nseScraper');
 const { analyzeFiiDiiSentiment } = require('./services/strategyEngine');
 const { triggerSignalAlert, getExecutedTrades } = require('./services/alertNotifier');
 const { runRealBacktest, getRealNiftyHistory } = require('./services/backtestEngine');
-const { screenInstitutionalStocks } = require('./services/stockScreenerEngine');
 const { screenRohanMehtaAthStrategy } = require('./services/rohanMehtaAthEngine');
 const { getActivePositions, updatePositionM2m } = require('./services/tradeTrackerService');
 const { getTripleConfirmationSignals } = require('./services/tripleConfirmationEngine');
@@ -21,51 +22,73 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Serve React Frontend static assets in production
 const frontendDist = path.join(__dirname, '../frontend/dist');
-if (require('fs').existsSync(frontendDist)) {
+if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
 }
 
 let userSettings = {
-  minFiiThreshold: 500,
-  minDiiThreshold: 300,
-  riskPerTradePct: 2,
-  telegramWebhookUrl: '',
-  discordWebhookUrl: '',
-  autoTradingEnabled: false
+  minFiiThreshold: 500, minDiiThreshold: 300, riskPerTradePct: 2,
+  telegramWebhookUrl: '', discordWebhookUrl: '', autoTradingEnabled: false
 };
 
-// 1. Get today's FII/DII sentiment & recommended strategy
+const realScreenerPath = path.join(__dirname, 'real_nifty500_screener.json');
+const realQuotesPath = path.join(__dirname, 'real_live_market_quotes.json');
+
+function runPythonScript(scriptName) {
+  const scriptPath = path.join(__dirname, scriptName);
+  try {
+    execSync(`python "${scriptPath}"`, { encoding: 'utf-8', timeout: 45000 });
+    return true;
+  } catch (e) {
+    console.error(`Error running ${scriptName}:`, e.message);
+    return false;
+  }
+}
+
+// 1. FII/DII Today
 app.get('/api/fii-dii/today', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
     const sentimentAnalysis = analyzeFiiDiiSentiment(data.today);
-    
-    res.json({
-      success: true,
-      raw: data.today,
-      analysis: sentimentAnalysis,
-      isLive: data.today.isLive || false,
-      timestamp: new Date().toISOString()
-    });
+    res.json({ success: true, raw: data.today, analysis: sentimentAnalysis, isLive: true, timestamp: new Date().toISOString() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 2. Master Universal Refresh Endpoint (Triggers fresh price scrapes across all tabs)
+// 2. Master Refresh All Rates
 app.post('/api/refresh-all-rates', async (req, res) => {
   try {
-    console.log('🔄 [MASTER REFRESH]: Triggering live price scrape across all strategies...');
-    const fiiData = await getFiiDiiToday();
-    const tripleSignals = getTripleConfirmationSignals();
-    const rohanSignals = screenRohanMehtaAthStrategy();
-    const activePos = updatePositionM2m(fiiData.today.niftyClose || 24820, 0);
+    console.log('🔄 [MASTER REFRESH]: Running live price scans...');
+    runPythonScript('fetch_real_live_quotes.py');
+    runPythonScript('live_nifty500_screener.py');
+    runPythonScript('scan_inr_currency_triple.py');
+    res.json({ success: true, message: 'Live market rates refreshed across all strategy tabs!', timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
+// 3. Nifty 500 Screener - reads real_nifty500_screener.json
+app.get('/api/fii-dii/stocks', (req, res) => {
+  try {
+    runPythonScript('live_nifty500_screener.py');
+    let stocks = [];
+    if (fs.existsSync(realScreenerPath)) {
+      const raw = fs.readFileSync(realScreenerPath, 'utf-8');
+      stocks = JSON.parse(raw).stocks || [];
+    }
     res.json({
       success: true,
-      message: 'Live market rates successfully refreshed across all strategy tabs!',
+      allStocks: stocks,
+      topBuyPicks: stocks.filter(s => s.signal.includes('BUY')),
+      topShortPicks: stocks.filter(s => s.signal.includes('SELL')),
+      summary: {
+        totalScreened: stocks.length,
+        institutionalBuyCount: stocks.filter(s => s.signal.includes('BUY')).length,
+        institutionalShortCount: stocks.filter(s => s.signal.includes('SELL')).length
+      },
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -73,35 +96,7 @@ app.post('/api/refresh-all-rates', async (req, res) => {
   }
 });
 
-// 3. Universal Recommendation Lifecycle Endpoint
-app.get('/api/recommendations/lifecycle', (req, res) => {
-  try {
-    const recommendations = getUniversalRecommendations();
-    res.json({ success: true, recommendations, timestamp: new Date().toISOString() });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 4. Active Trade Position Tracker Endpoint (1:2 Ratio Spread Tracking)
-app.get('/api/position/active', async (req, res) => {
-  try {
-    const data = await getFiiDiiToday();
-    const currentSpot = data.today.niftyClose || 24820;
-    const trackedPositions = updatePositionM2m(currentSpot, 0);
-    
-    res.json({
-      success: true,
-      niftyCurrentSpot: currentSpot,
-      positions: trackedPositions,
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 5. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
+// 4. Triple Confirmation Strategy
 app.get('/api/strategy/triple-confirmation', (req, res) => {
   try {
     const result = getTripleConfirmationSignals();
@@ -111,7 +106,39 @@ app.get('/api/strategy/triple-confirmation', (req, res) => {
   }
 });
 
-// 6. Get historical FII & DII trends (30 days)
+// 5. Rohan Mehta ATH Strategy
+app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
+  try {
+    const result = screenRohanMehtaAthStrategy();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. Active Trade Position Tracker
+app.get('/api/position/active', async (req, res) => {
+  try {
+    const data = await getFiiDiiToday();
+    const currentSpot = data.today.niftyClose || 24252;
+    const trackedPositions = updatePositionM2m(currentSpot, 0);
+    res.json({ success: true, niftyCurrentSpot: currentSpot, positions: trackedPositions, timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7. Universal Recommendation Lifecycle
+app.get('/api/recommendations/lifecycle', (req, res) => {
+  try {
+    const recommendations = getUniversalRecommendations();
+    res.json({ success: true, recommendations, timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. FII/DII History
 app.get('/api/fii-dii/history', (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
@@ -122,12 +149,11 @@ app.get('/api/fii-dii/history', (req, res) => {
   }
 });
 
-// 7. Trigger Signal & Execute Order (Mock or Webhook)
+// 9. Trigger Signal
 app.post('/api/trigger-signal', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
     const sentimentAnalysis = analyzeFiiDiiSentiment(data.today);
-    
     const result = await triggerSignalAlert(sentimentAnalysis, userSettings);
     res.json({ success: true, result });
   } catch (err) {
@@ -135,65 +161,36 @@ app.post('/api/trigger-signal', async (req, res) => {
   }
 });
 
-// 8. Get Executed Trade Logs
+// 10. Trade Log
 app.get('/api/trade-log', (req, res) => {
   res.json({ success: true, trades: getExecutedTrades() });
 });
 
-// 9. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
+// 11. Backtest
 app.post('/api/backtest', (req, res) => {
   try {
     const { initialCapital, days, lots } = req.body;
     const capital = parseFloat(initialCapital) || 400000;
     const numLots = parseInt(lots) || 2;
-    
     const realHistory = getRealNiftyHistory();
     const result = runRealBacktest(realHistory, capital, numLots, 65);
-    
     res.json({ success: true, backtest: result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 10. Nifty 500 High-Growth Institutional Stock Screener API
-app.get('/api/fii-dii/stocks', async (req, res) => {
-  try {
-    const data = await getFiiDiiToday();
-    const stocksAnalysis = screenInstitutionalStocks(data.today);
-    res.json({ success: true, ...stocksAnalysis });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 11. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
-app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
-  try {
-    const result = screenRohanMehtaAthStrategy();
-    res.json({ success: true, ...result });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 12. Settings REST API
-app.get('/api/settings', (req, res) => {
+// 12. Settings
+app.get('/api/settings', (req, res) => res.json({ success: true, settings: userSettings }));
+app.post('/api/settings', (req, res) => {
+  userSettings = { ...userSettings, ...req.body };
   res.json({ success: true, settings: userSettings });
 });
 
-app.post('/api/settings', (req, res) => {
-  userSettings = { ...userSettings, ...req.body };
-  res.json({ success: true, settings: userSettings, message: 'Settings updated successfully' });
-});
+app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
-});
-
-// Fallback to React index.html for SPA routes
 app.get('*', (req, res) => {
-  if (require('fs').existsSync(path.join(frontendDist, 'index.html'))) {
+  if (fs.existsSync(path.join(frontendDist, 'index.html'))) {
     res.sendFile(path.join(frontendDist, 'index.html'));
   } else {
     res.send('FII/DII Backend Server Running.');
@@ -202,49 +199,35 @@ app.get('*', (req, res) => {
 
 const server = http.createServer(app);
 
-// WebSocket Server for live dashboard updates
 const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
   const interval = setInterval(async () => {
     try {
       const data = await getFiiDiiToday();
       const analysis = analyzeFiiDiiSentiment(data.today);
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'TICKER_UPDATE', data: analysis }));
-      }
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'TICKER_UPDATE', data: analysis }));
     } catch (e) {}
   }, 10000);
-  
-  ws.on ? ws.on('close', () => clearInterval(interval)) : null;
+  ws.on('close', () => clearInterval(interval));
 });
 
-// ON-STARTUP AUTO FETCH FUNCTION
 async function runStartupAutoFetch() {
-  console.log('\n🚀 [SERVER STARTUP AUTO-FETCH]: Running immediate data sync on boot...');
+  console.log('\n🚀 [STARTUP]: Fetching 100% real live market quotes...');
+  runPythonScript('fetch_real_live_quotes.py');
+  runPythonScript('live_nifty500_screener.py');
+  runPythonScript('scan_inr_currency_triple.py');
   try {
     const data = await getFiiDiiToday();
-    console.log(`✓ [STARTUP SYNC COMPLETE]: FII Net: ₹${data.today.fii.netValue} Cr | DII Net: ₹${data.today.dii.netValue} Cr`);
+    console.log(`✓ Nifty 50 Spot: ₹${data.today.niftyClose}`);
   } catch (err) {
-    console.error('⚠️ Startup sync error:', err.message);
+    console.error('Startup error:', err.message);
   }
 }
 
 cron.schedule('30 17 * * 1-5', async () => {
-  console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE FII/DII Cash Data at 5:30 PM IST...');
-  try {
-    const data = await getFiiDiiToday();
-    const analysis = analyzeFiiDiiSentiment(data.today);
-    if (userSettings.autoTradingEnabled) {
-      await triggerSignalAlert(analysis, userSettings);
-    }
-  } catch (e) {}
-});
-
-cron.schedule('30 18 * * 1-5', async () => {
-  console.log('⏰ [CRON JOB RUNNING]: Fetching newly released NSE Participant OI Data at 6:30 PM IST...');
-  try {
-    await getFiiDiiToday();
-  } catch (e) {}
+  console.log('⏰ [CRON]: Refreshing live market data at 5:30 PM...');
+  runPythonScript('fetch_real_live_quotes.py');
+  runPythonScript('live_nifty500_screener.py');
 });
 
 server.listen(PORT, () => {
