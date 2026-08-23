@@ -9,14 +9,12 @@ import io
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-# Major INR Currency Pairs
-INR_CURRENCY_PAIRS = [
-    {"symbol": "INR=X", "name": "USD / INR (US Dollar)", "base": "USD"},
-    {"symbol": "EURINR=X", "name": "EUR / INR (Euro)", "base": "EUR"},
-    {"symbol": "GBPINR=X", "name": "GBP / INR (British Pound)", "base": "GBP"},
-    {"symbol": "JPYINR=X", "name": "JPY / INR (100 Japanese Yen)", "base": "JPY"},
-    {"symbol": "AEDINR=X", "name": "AED / INR (UAE Dirham)", "base": "AED"},
-    {"symbol": "SGDINR=X", "name": "SGD / INR (Singapore Dollar)", "base": "SGD"}
+# Official NSE / BSE Exchange-Traded Currency Derivative Pairs
+NSE_TRADED_CURRENCY_PAIRS = [
+    {"symbol": "INR=X", "name": "USD / INR (US Dollar)", "base": "USD", "exchangeStatus": "NSE / BSE F&O Traded"},
+    {"symbol": "EURINR=X", "name": "EUR / INR (Euro)", "base": "EUR", "exchangeStatus": "NSE / BSE F&O Traded"},
+    {"symbol": "GBPINR=X", "name": "GBP / INR (British Pound)", "base": "GBP", "exchangeStatus": "NSE / BSE F&O Traded"},
+    {"symbol": "JPYINR=X", "name": "JPY / INR (100 Japanese Yen)", "base": "JPY", "exchangeStatus": "NSE / BSE F&O Traded"}
 ]
 
 def calculate_rsi(series, period=14):
@@ -27,13 +25,14 @@ def calculate_rsi(series, period=14):
     return 100 - (100 / (1 + rs))
 
 def scan_currency_triple_confirmation():
-    print("--- SCANNING INR CURRENCY PAIRS: 20 DMA + 100 DMA + RSI TRIPLE CONFIRMATION ---")
+    print("--- SCANNING OFFICIAL NSE/BSE CURRENCY PAIRS: 20 DMA + 100 DMA + RSI TRIPLE CONFIRMATION ---")
 
     currency_signals = []
 
-    for pair in INR_CURRENCY_PAIRS:
+    for pair in NSE_TRADED_CURRENCY_PAIRS:
         sym = pair["symbol"]
         name = pair["name"]
+        status_tag = pair["exchangeStatus"]
 
         try:
             df = yf.download(sym, period="1y", interval="1d", progress=False)
@@ -79,7 +78,7 @@ def scan_currency_triple_confirmation():
 
             if current_close > dma20 and dma20 > dma100 and rsi > 55:
                 signal_type = "BUY (USD/FX Appreciation)"
-                sl_price = round(dma20 * 0.993, 2) # SL set 0.7% below 20 DMA (lower currency volatility)
+                sl_price = round(dma20 * 0.993, 2) # SL set 0.7% below 20 DMA
                 risk = current_close - sl_price
                 tp_price = round(current_close + (risk * 2.0), 2)
                 risk_pct = round(((current_close - sl_price) / current_close) * 100, 2)
@@ -94,7 +93,7 @@ def scan_currency_triple_confirmation():
             currency_signals.append({
                 "symbol": sym,
                 "name": name,
-                "type": "Currency Pair",
+                "type": status_tag,
                 "signalType": signal_type,
                 "currentPrice": round(current_close, 4),
                 "dma20": round(dma20, 4),
@@ -110,7 +109,7 @@ def scan_currency_triple_confirmation():
         except Exception as e:
             print(f"Error scanning {sym}: {e}")
 
-    print(f"\n✓ Currency Scan Complete. Found {len(currency_signals)} INR Currency Pair Signals.")
+    print(f"\n✓ Scan Complete. Found {len(currency_signals)} Official NSE/BSE Currency Derivatives Signals.")
     for sig in currency_signals:
         print(f"  [{sig['signalType']}] {sig['name']}: Rate ₹{sig['currentPrice']} | SL ₹{sig['stopLoss']} | Target ₹{sig['targetPrice']} | Prob: {sig['probSuccess']}%")
 

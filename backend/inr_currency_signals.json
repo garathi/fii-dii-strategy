@@ -3,7 +3,7 @@
     {
       "symbol": "INR=X",
       "name": "USD / INR (US Dollar)",
-      "type": "Currency Pair",
+      "type": "NSE / BSE F&O Traded",
       "signalType": "BUY (USD/FX Appreciation)",
       "currentPrice": 95.71,
       "dma20": 95.4839,
@@ -18,7 +18,7 @@
     {
       "symbol": "EURINR=X",
       "name": "EUR / INR (Euro)",
-      "type": "Currency Pair",
+      "type": "NSE / BSE F&O Traded",
       "signalType": "BUY (USD/FX Appreciation)",
       "currentPrice": 111.7701,
       "dma20": 109.9802,
@@ -33,7 +33,7 @@
     {
       "symbol": "GBPINR=X",
       "name": "GBP / INR (British Pound)",
-      "type": "Currency Pair",
+      "type": "NSE / BSE F&O Traded",
       "signalType": "BUY (USD/FX Appreciation)",
       "currentPrice": 130.5867,
       "dma20": 128.6754,
@@ -48,7 +48,7 @@
     {
       "symbol": "JPYINR=X",
       "name": "JPY / INR (100 Japanese Yen)",
-      "type": "Currency Pair",
+      "type": "NSE / BSE F&O Traded",
       "signalType": "NEUTRAL",
       "currentPrice": 0.6018,
       "dma20": 0.5964,
@@ -59,37 +59,7 @@
       "riskPct": 0.0,
       "probSuccess": 14.0,
       "recommendationDate": "23 Aug 2026 09:30 AM"
-    },
-    {
-      "symbol": "AEDINR=X",
-      "name": "AED / INR (UAE Dirham)",
-      "type": "Currency Pair",
-      "signalType": "BUY (USD/FX Appreciation)",
-      "currentPrice": 26.009,
-      "dma20": 26.0079,
-      "dma100": 25.8918,
-      "rsi": 55.02,
-      "stopLoss": 25.83,
-      "targetPrice": 26.37,
-      "riskPct": 0.69,
-      "probSuccess": 30.5,
-      "recommendationDate": "23 Aug 2026 09:30 AM"
-    },
-    {
-      "symbol": "SGDINR=X",
-      "name": "SGD / INR (Singapore Dollar)",
-      "type": "Currency Pair",
-      "signalType": "BUY (USD/FX Appreciation)",
-      "currentPrice": 75.376,
-      "dma20": 74.4654,
-      "dma100": 74.0137,
-      "rsi": 58.73,
-      "stopLoss": 73.94,
-      "targetPrice": 78.25,
-      "riskPct": 1.91,
-      "probSuccess": 33.3,
-      "recommendationDate": "23 Aug 2026 09:30 AM"
     }
   ],
-  "scannedAt": "2026-08-23T13:47:50.266741"
+  "scannedAt": "2026-08-23T13:50:15.452321"
 }
