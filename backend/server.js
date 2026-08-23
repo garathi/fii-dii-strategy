@@ -259,6 +259,15 @@ cron.schedule('30 17 * * 1-5', async () => {
   console.log('⏰ [CRON]: Refreshing live market data at 5:30 PM...');
   runPythonScript('fetch_real_live_quotes.py');
   runPythonScript('live_nifty500_screener.py');
+  
+  try {
+    const data = await getFiiDiiToday();
+    const sentimentAnalysis = analyzeFiiDiiSentiment(data.today);
+    console.log(`⏰ [CRON]: Analyzing market sentiment: ${sentimentAnalysis.sentiment}. Triggering automated alerts if configured...`);
+    await triggerSignalAlert(sentimentAnalysis, userSettings);
+  } catch (err) {
+    console.error('Cron alert error:', err.message);
+  }
 });
 
 server.listen(PORT, () => {
