@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Clock, CheckCircle, DollarSign, Globe } from 'lucide-react';
+import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Clock, CheckCircle, Globe } from 'lucide-react';
 
 export default function TripleConfirmationStrategy() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [assetCategory, setAssetCategory] = useState('ALL'); // ALL, STOCKS, CURRENCY
+  const [signalFilter, setSignalFilter] = useState('ALL'); // ALL, BUY, SELL
   const [onlyHighProb, setOnlyHighProb] = useState(false);
 
   const fetchTripleData = (isBackground = false) => {
@@ -27,12 +28,22 @@ export default function TripleConfirmationStrategy() {
   const allSignals = data?.signals || [];
   
   let filteredSignals = allSignals;
+
+  // Filter 1: Asset Category
   if (assetCategory === 'STOCKS') {
-    filteredSignals = filteredSignals.filter(s => s.type !== 'Currency Pair');
+    filteredSignals = filteredSignals.filter(s => s.type !== 'NSE / BSE F&O Traded' && s.type !== 'Currency Pair');
   } else if (assetCategory === 'CURRENCY') {
-    filteredSignals = filteredSignals.filter(s => s.type === 'Currency Pair');
+    filteredSignals = filteredSignals.filter(s => s.type === 'NSE / BSE F&O Traded' || s.type === 'Currency Pair');
   }
 
+  // Filter 2: Signal Type (BUY vs SELL)
+  if (signalFilter === 'BUY') {
+    filteredSignals = filteredSignals.filter(s => s.signalType.includes('BUY'));
+  } else if (signalFilter === 'SELL') {
+    filteredSignals = filteredSignals.filter(s => s.signalType.includes('SELL'));
+  }
+
+  // Filter 3: High Probability Threshold (>=70%)
   if (onlyHighProb) {
     filteredSignals = filteredSignals.filter(s => s.probSuccess >= 70.0);
   }
@@ -47,13 +58,13 @@ export default function TripleConfirmationStrategy() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a78bfa', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>
-              <Globe size={18} /> Stocks, F&O Indices & INR Currency Pairs Scanner
+              <Globe size={18} /> Stocks, F&O Indices & NSE Currency Pairs Scanner
             </div>
             <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', marginTop: '0.35rem' }}>
               20 DMA + 100 DMA + RSI Triple Confirmation Strategy
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-              Scans Indian Stocks, Indices, and all INR Currency Pairs (USD/INR, EUR/INR, GBP/INR, JPY/INR, AED/INR, SGD/INR) with exact Stop Loss & Target.
+              Scans Indian Stocks, Indices, and Official NSE/BSE Currency Pairs (USD/INR, EUR/INR, GBP/INR, JPY/INR) with exact SL & Target.
             </p>
           </div>
 
@@ -64,38 +75,61 @@ export default function TripleConfirmationStrategy() {
           </div>
         </div>
 
-        {/* Asset Category Selector Bar */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+        {/* Comprehensive Filters Bar */}
+        <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.2rem' }}>
+            Filters:
+          </span>
+
+          {/* Asset Category Filters */}
           <button
             onClick={() => setAssetCategory('ALL')}
             className={`btn-secondary ${assetCategory === 'ALL' ? 'btn-primary' : ''}`}
-            style={{ fontSize: '0.8rem', background: assetCategory === 'ALL' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: assetCategory === 'ALL' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
           >
-            All Instruments ({allSignals.length})
+            All Assets ({allSignals.length})
           </button>
 
           <button
             onClick={() => setAssetCategory('CURRENCY')}
             className={`btn-secondary ${assetCategory === 'CURRENCY' ? 'btn-primary' : ''}`}
-            style={{ fontSize: '0.8rem', background: assetCategory === 'CURRENCY' ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : '' }}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: assetCategory === 'CURRENCY' ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : '' }}
           >
-            <Globe size={14} /> INR Currency Pairs ({allSignals.filter(s => s.type === 'Currency Pair').length})
+            <Globe size={13} /> NSE Currency Pairs ({allSignals.filter(s => s.type === 'NSE / BSE F&O Traded' || s.type === 'Currency Pair').length})
           </button>
 
           <button
             onClick={() => setAssetCategory('STOCKS')}
             className={`btn-secondary ${assetCategory === 'STOCKS' ? 'btn-primary' : ''}`}
-            style={{ fontSize: '0.8rem', background: assetCategory === 'STOCKS' ? 'linear-gradient(135deg, #8b5cf6, #a78bfa)' : '' }}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: assetCategory === 'STOCKS' ? 'linear-gradient(135deg, #8b5cf6, #a78bfa)' : '' }}
           >
-            Stocks & F&O Indices ({allSignals.filter(s => s.type !== 'Currency Pair').length})
+            Stocks & Indices ({allSignals.filter(s => s.type !== 'NSE / BSE F&O Traded' && s.type !== 'Currency Pair').length})
+          </button>
+
+          {/* Direction Call Filters */}
+          <button
+            onClick={() => setSignalFilter(signalFilter === 'BUY' ? 'ALL' : 'BUY')}
+            className={`btn-secondary ${signalFilter === 'BUY' ? 'btn-primary' : ''}`}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: signalFilter === 'BUY' ? '#34d399' : '', color: signalFilter === 'BUY' ? '#000' : '' }}
+          >
+            BUY Calls Only
           </button>
 
           <button
+            onClick={() => setSignalFilter(signalFilter === 'SELL' ? 'ALL' : 'SELL')}
+            className={`btn-secondary ${signalFilter === 'SELL' ? 'btn-primary' : ''}`}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: signalFilter === 'SELL' ? '#f87171' : '', color: signalFilter === 'SELL' ? '#fff' : '' }}
+          >
+            SELL Calls Only
+          </button>
+
+          {/* Probability Filter */}
+          <button
             onClick={() => setOnlyHighProb(!onlyHighProb)}
             className={`btn-secondary ${onlyHighProb ? 'btn-primary' : ''}`}
-            style={{ fontSize: '0.8rem', background: onlyHighProb ? 'linear-gradient(135deg, #ec4899, #f43f5e)' : '', marginLeft: 'auto' }}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: onlyHighProb ? 'linear-gradient(135deg, #ec4899, #f43f5e)' : '', marginLeft: 'auto' }}
           >
-            <Filter size={14} /> {onlyHighProb ? 'Filter: High Prob (≥70%)' : 'Show All Probabilities'}
+            <Filter size={13} /> {onlyHighProb ? 'High Prob (≥70%) ON' : 'Filter: High Prob (≥70%)'}
           </button>
         </div>
       </div>
@@ -104,16 +138,16 @@ export default function TripleConfirmationStrategy() {
       <div className="glass-panel" style={{ padding: '1.75rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Target size={18} style={{ color: '#8b5cf6' }} /> Active Triple Confirmation Signals ({buyCallsCount} BUY / {sellCallsCount} SHORT)
+            <Target size={18} style={{ color: '#8b5cf6' }} /> Active Triple Confirmation Signals ({filteredSignals.length} Listed)
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Scanned: {data?.scannedAt ? new Date(data.scannedAt).toLocaleTimeString() : 'Just Now'}
           </span>
         </div>
 
-        {loading && !data ? (
+        {loading && filteredSignals.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            Scanning INR Currency Pairs & Stocks...
+            Scanning NSE Currency Pairs & Stocks...
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
