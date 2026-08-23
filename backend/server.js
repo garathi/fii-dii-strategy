@@ -32,9 +32,14 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const frontendDist = path.join(__dirname, '../frontend/dist');
+// Serve built frontend — path is relative to backend/__dirname on both local + Render
+const frontendDist = path.resolve(__dirname, '..', 'frontend', 'dist');
+console.log(`📁 Serving frontend from: ${frontendDist}`);
 if (fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
+  app.use(express.static(frontendDist, { index: 'index.html' }));
+  console.log('✓ Frontend static files mounted');
+} else {
+  console.warn('⚠️  frontend/dist not found — HTML will not be served');
 }
 
 let userSettings = {
