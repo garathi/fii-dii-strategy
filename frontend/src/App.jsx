@@ -53,7 +53,7 @@ export default function App() {
     fetchData();
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = window.location.hostname === 'localhost' ? 'localhost:5000' : window.location.host;
+    const wsHost = import.meta.env.DEV ? '127.0.0.1:5000' : window.location.host;
     const ws = new WebSocket(`${wsProtocol}//${wsHost}`);
 
     ws.onmessage = (event) => {

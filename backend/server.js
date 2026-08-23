@@ -50,18 +50,21 @@ let userSettings = {
 const realScreenerPath = path.join(__dirname, 'real_nifty500_screener.json');
 const realQuotesPath = path.join(__dirname, 'real_live_market_quotes.json');
 
+const { exec } = require('child_process');
+
 function runPythonScript(scriptName) {
   if (!PYTHON_BIN) return false;
   const scriptPath = path.join(__dirname, scriptName);
   if (!fs.existsSync(scriptPath)) { console.warn(`Script not found: ${scriptName}`); return false; }
-  try {
-    execFileSync(PYTHON_BIN, [scriptPath], { encoding: 'utf-8', timeout: 60000 });
+  
+  exec(`${PYTHON_BIN} "${scriptPath}"`, { encoding: 'utf-8', timeout: 60000 }, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`⚠️  Error running ${scriptName}: ${error.message.substring(0, 200)}`);
+      return;
+    }
     console.log(`✓ [Python] ${scriptName} done`);
-    return true;
-  } catch (e) {
-    console.error(`⚠️  Error running ${scriptName}: ${e.message ? e.message.substring(0, 200) : e}`);
-    return false;
-  }
+  });
+  return true;
 }
 
 // 1. FII/DII Today
