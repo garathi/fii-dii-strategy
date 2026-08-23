@@ -48,11 +48,11 @@ export default function StockScreener() {
         <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>1. Today 1-Day Intraday Change (%)</div>
-            <div style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '0.15rem' }}>Real intraday price movement for today's session (e.g. HAL +0.04%).</div>
+            <div style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '0.15rem' }}>Real intraday price movement for today's session (e.g. CDSL +3.19%, Trent -1.55%).</div>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>2. 52-Week Peak Drawdown (%)</div>
-            <div style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '0.15rem' }}>Distance from peak 52-week All-Time High level (e.g. HAL 2.91% from ATH).</div>
+            <div style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '0.15rem' }}>Distance from peak 52-week All-Time High level.</div>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>3. Trade Success Probability (%)</div>
@@ -84,9 +84,8 @@ export default function StockScreener() {
               </thead>
               <tbody>
                 {stocks.map((stk, idx) => {
-                  // Strictly use real todayChangePct from real_live_market_quotes.json
-                  const todayChange = stk.todayChangePct !== undefined ? stk.todayChangePct : 0.04;
-                  const distHigh = stk.distFromHighPct !== undefined ? stk.distFromHighPct : 2.91;
+                  const todayChange = stk.todayChangePct !== undefined ? stk.todayChangePct : 0.0;
+                  const distHigh = stk.distFromHighPct !== undefined ? stk.distFromHighPct : 0.0;
                   const isBullish = stk.signal && stk.signal.includes('BUY');
                   const prob = stk.probSuccess || (distHigh <= 3.0 ? 84.2 : distHigh <= 15.0 ? 76.5 : 71.0);
 
@@ -97,7 +96,7 @@ export default function StockScreener() {
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ fontWeight: 700, color: '#fff' }}>{stk.name}</div>
-                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stk.symbol} • {stk.sector}</div>
+                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stk.cleanSymbol || stk.symbol} • {stk.sector}</div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <span className={`badge ${isBullish ? 'badge-bullish' : 'badge-bearish'}`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
