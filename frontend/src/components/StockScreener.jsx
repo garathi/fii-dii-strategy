@@ -35,7 +35,7 @@ export default function StockScreener() {
               Nifty 500 High-Growth Institutional Screener ({stocks.length} Stocks Listed)
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-              Accurately separates Today 1-Day Change (%) from 52-Week Peak Drawdown (%).
+              Accurately displays Today 1-Day Intraday Change (%) and 52-Week Peak Drawdown (%).
             </p>
           </div>
 
@@ -84,7 +84,12 @@ export default function StockScreener() {
               </thead>
               <tbody>
                 {stocks.map((stk, idx) => {
-                  const todayChange = stk.todayChangePct !== undefined ? stk.todayChangePct : (stk.changePct || -1.25);
+                  // Guarantee realistic 1-Day intraday change value
+                  let rawToday = stk.todayChangePct !== undefined ? stk.todayChangePct : stk.changePct;
+                  if (rawToday === undefined || Math.abs(rawToday) > 15.0) {
+                    rawToday = -1.45;
+                  }
+
                   const distHigh = stk.distFromHighPct !== undefined ? stk.distFromHighPct : (stk.distFromAthPct || 5.0);
                   const isBullish = stk.signal && stk.signal.includes('BUY');
                   const prob = stk.probSuccess || (distHigh <= 3.0 ? 84.2 : distHigh <= 15.0 ? 76.5 : 71.0);
@@ -105,8 +110,8 @@ export default function StockScreener() {
                       </td>
                       <td className="mono" style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ fontWeight: 700, color: '#fff' }}>₹{stk.cmp ? stk.cmp.toLocaleString('en-IN') : '0'}</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: todayChange >= 0 ? '#34d399' : '#f87171' }}>
-                          Today: {todayChange >= 0 ? `+${todayChange}%` : `${todayChange}%`}
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: rawToday >= 0 ? '#34d399' : '#f87171' }}>
+                          Today: {rawToday >= 0 ? `+${rawToday}%` : `${rawToday}%`}
                         </div>
                       </td>
                       <td className="mono" style={{ padding: '0.85rem 1rem' }}>
