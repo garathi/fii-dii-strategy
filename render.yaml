@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fii-dii-strategy
+    env: node
+    region: singapore
+    buildCommand: pip3 install -r requirements.txt && npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend
+    startCommand: node backend/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000

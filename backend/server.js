@@ -4,8 +4,18 @@ const http = require('http');
 const path = require('path');
 const WebSocket = require('ws');
 const cron = require('node-cron');
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
+
+// Detect correct Python binary (python3 on Linux/Render, python on Windows)
+let PYTHON_BIN = 'python3';
+try { execFileSync('python3', ['--version']); } catch (e) {
+  try { execFileSync('python', ['--version']); PYTHON_BIN = 'python'; } catch (e2) {
+    console.warn('⚠️  No Python binary found — live screener will serve cached JSON');
+    PYTHON_BIN = null;
+  }
+}
+console.log(`🐍 Python binary: ${PYTHON_BIN || 'NONE (using cached JSON)'}`);
 
 const { getFiiDiiToday, generateHistoricalData } = require('./services/nseScraper');
 const { analyzeFiiDiiSentiment } = require('./services/strategyEngine');
@@ -36,12 +46,15 @@ const realScreenerPath = path.join(__dirname, 'real_nifty500_screener.json');
 const realQuotesPath = path.join(__dirname, 'real_live_market_quotes.json');
 
 function runPythonScript(scriptName) {
+  if (!PYTHON_BIN) return false;
   const scriptPath = path.join(__dirname, scriptName);
+  if (!fs.existsSync(scriptPath)) { console.warn(`Script not found: ${scriptName}`); return false; }
   try {
-    execSync(`python "${scriptPath}"`, { encoding: 'utf-8', timeout: 45000 });
+    execFileSync(PYTHON_BIN, [scriptPath], { encoding: 'utf-8', timeout: 60000 });
+    console.log(`✓ [Python] ${scriptName} done`);
     return true;
   } catch (e) {
-    console.error(`Error running ${scriptName}:`, e.message);
+    console.error(`⚠️  Error running ${scriptName}: ${e.message ? e.message.substring(0, 200) : e}`);
     return false;
   }
 }
@@ -70,24 +83,25 @@ app.post('/api/refresh-all-rates', async (req, res) => {
   }
 });
 
-// 3. Nifty 500 Screener - reads real_nifty500_screener.json
+// 3. Nifty 500 Screener - serves pre-built JSON (Python runs on startup/refresh, NOT on every request)
 app.get('/api/fii-dii/stocks', (req, res) => {
   try {
-    runPythonScript('live_nifty500_screener.py');
     let stocks = [];
     if (fs.existsSync(realScreenerPath)) {
       const raw = fs.readFileSync(realScreenerPath, 'utf-8');
       stocks = JSON.parse(raw).stocks || [];
+    } else {
+      console.warn('real_nifty500_screener.json not found — returning empty list');
     }
     res.json({
       success: true,
       allStocks: stocks,
-      topBuyPicks: stocks.filter(s => s.signal.includes('BUY')),
-      topShortPicks: stocks.filter(s => s.signal.includes('SELL')),
+      topBuyPicks: stocks.filter(s => s.signal && s.signal.includes('BUY')),
+      topShortPicks: stocks.filter(s => s.signal && s.signal.includes('SELL')),
       summary: {
         totalScreened: stocks.length,
-        institutionalBuyCount: stocks.filter(s => s.signal.includes('BUY')).length,
-        institutionalShortCount: stocks.filter(s => s.signal.includes('SELL')).length
+        institutionalBuyCount: stocks.filter(s => s.signal && s.signal.includes('BUY')).length,
+        institutionalShortCount: stocks.filter(s => s.signal && s.signal.includes('SELL')).length
       },
       timestamp: new Date().toISOString()
     });
