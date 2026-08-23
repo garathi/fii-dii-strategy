@@ -42,7 +42,7 @@ function updatePositionM2m(niftySpotOverride, vixOverride) {
       strategyName: "1:2 Upgraded Ratio Spread + VIX Circuit Breaker",
       underlyingSymbol: "NIFTY 50",
       signalDate: "22 Aug 2026",
-      deploymentDate: "25 Aug 2026 09:30 AM IST",
+      deploymentDate: "22 Aug 2026 09:30 AM IST",
       expiryDate: "25 Aug 2026 (Tuesday Expiry)",
       currentSpotPrice: currentSpot,
       entrySpotPrice: 24250.00,
@@ -53,6 +53,10 @@ function updatePositionM2m(niftySpotOverride, vixOverride) {
       maxProfitRs: 35100, // (300 pt spread - 31 debit) * 130 qty
       maxRiskRs: 18000,   // Max risk at extreme crash/surge
       netM2mRs: totalM2mRs,
+      currentM2mPnl: totalM2mRs,
+      totalCreditCollected: -(entryCostNet * totalQty),
+      targetPnl: 35100 / 2, // 50% of Max Profit
+      squareOffNotes: "Hold until target PnL (50% of max profit) is reached or trailing stop-loss is triggered. If VIX spikes > 15%, evaluate early exit.",
       status: "ACTIVE_DEPLOYED",
       legs: [
         {
