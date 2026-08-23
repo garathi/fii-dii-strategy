@@ -3,11 +3,11 @@ import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Clock
 
 export default function TripleConfirmationStrategy() {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [onlyHighProb, setOnlyHighProb] = useState(true);
 
-  const fetchTripleData = () => {
-    setLoading(true);
+  const fetchTripleData = (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     fetch('/api/strategy/triple-confirmation')
       .then(res => res.json())
       .then(resData => {
@@ -18,18 +18,10 @@ export default function TripleConfirmationStrategy() {
   };
 
   useEffect(() => {
-    fetchTripleData();
-    const interval = setInterval(fetchTripleData, 30000);
+    fetchTripleData(false);
+    const interval = setInterval(() => fetchTripleData(true), 30000);
     return () => clearInterval(interval);
   }, []);
-
-  if (loading && !data) {
-    return (
-      <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Scanning F&O Indices & Nifty 50 for 20 DMA + 100 DMA + RSI Triple Confirmation Calls...
-      </div>
-    );
-  }
 
   const allSignals = data?.signals || [];
   const filteredSignals = onlyHighProb
@@ -64,7 +56,7 @@ export default function TripleConfirmationStrategy() {
             >
               <Filter size={14} /> {onlyHighProb ? 'Showing High Prob (≥70%)' : 'Show All Calls'}
             </button>
-            <button className="btn-secondary" onClick={fetchTripleData} style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem', background: 'var(--accent-cyan)', color: '#000', fontWeight: 700 }}>
+            <button className="btn-secondary" onClick={() => fetchTripleData(false)} style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem', background: 'var(--accent-cyan)', color: '#000', fontWeight: 700 }}>
               <RefreshCw size={14} className={loading ? 'spin' : ''} /> Rescan Now
             </button>
           </div>
@@ -73,7 +65,7 @@ export default function TripleConfirmationStrategy() {
         {/* Retention Rule Info Banner */}
         <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.8rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <CheckCircle size={16} />
-          <span><strong>2-Day Post-Exit Retention Policy:</strong> When a stock hits its Target Price (TP) or Stop Loss (SL), it remains displayed on this tab for 2 full calendar days before auto-archiving.</span>
+          <span><strong>2-Day Post-Exit Retention Policy:</strong> Previous recommendations, entry prices, and entry dates are permanently saved. Calls are maintained for 2 full days after hitting Target or Stop Loss before auto-archiving.</span>
         </div>
       </div>
 
@@ -88,70 +80,88 @@ export default function TripleConfirmationStrategy() {
           </span>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '0.75rem 1rem' }}>Recommendation Date</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Instrument & Type</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Signal Call</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Rec. Entry Price</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Current Live Rate</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Exact Stop Loss</th>
-                <th style={{ padding: '0.75rem 1rem' }}>1:2 Target Price</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Success Prob</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Retention Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSignals.map((sig, idx) => {
-                const isBuy = sig.signalType === 'BUY';
-                const isHighProb = sig.probSuccess >= 70.0;
-                const recDate = sig.recommendationDate || '23 Aug 2026';
-                const recPrice = sig.recommendationPrice || sig.currentPrice;
+        {loading && !data ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            Loading persistent recommendations...
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                  <th style={{ padding: '0.75rem 1rem' }}>Recommendation Date</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Instrument & Type</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Signal Call</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Rec. Entry Price</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Current Live Rate</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Exact Stop Loss</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>1:2 Target Price</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Success Prob</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Lifecycle Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSignals.map((sig, idx) => {
+                  const isBuy = sig.signalType === 'BUY';
+                  const isHighProb = sig.probSuccess >= 70.0;
+                  const recDate = sig.recommendationDate || '23 Aug 2026 09:30 AM';
+                  const recPrice = sig.recommendationPrice || sig.currentPrice;
+                  const isTargetHit = sig.status === 'TARGET_HIT';
+                  const isSlHit = sig.status === 'SL_HIT';
 
-                return (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isHighProb ? 'rgba(139,92,246,0.03)' : 'transparent' }}>
-                    <td style={{ padding: '0.85rem 1rem' }} className="mono">
-                      <div style={{ fontSize: '0.8rem', color: '#fff' }}>{recDate}</div>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <div style={{ fontWeight: 700, color: '#fff' }}>{sig.name}</div>
-                      <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sig.symbol} • {sig.type}</div>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span className={`badge ${isBuy ? 'badge-bullish' : 'badge-bearish'}`} style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', fontWeight: 800 }}>
-                        {sig.signalType}
-                      </span>
-                    </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fbbf24' }}>
-                      ₹{recPrice.toLocaleString('en-IN')}
-                    </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#38bdf8' }}>
-                      ₹{sig.currentPrice.toLocaleString('en-IN')}
-                    </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#f87171' }}>
-                      ₹{sig.stopLoss.toLocaleString('en-IN')}
-                    </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#34d399' }}>
-                      ₹{sig.targetPrice.toLocaleString('en-IN')}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span className={`badge ${isHighProb ? 'badge-bullish' : 'badge-neutral'}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-                        {isHighProb ? `🔥 ${sig.probSuccess}% HIGH PROB` : `${sig.probSuccess}%`}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <span className="badge badge-bullish" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>
-                        {sig.status || 'ACTIVE (Tracking SL/TP)'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isTargetHit ? 'rgba(52,211,153,0.05)' : isSlHit ? 'rgba(248,113,113,0.05)' : isHighProb ? 'rgba(139,92,246,0.03)' : 'transparent' }}>
+                      <td style={{ padding: '0.85rem 1rem' }} className="mono">
+                        <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>{recDate}</div>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <div style={{ fontWeight: 700, color: '#fff' }}>{sig.name}</div>
+                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sig.symbol} • {sig.type}</div>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <span className={`badge ${isBuy ? 'badge-bullish' : 'badge-bearish'}`} style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', fontWeight: 800 }}>
+                          {sig.signalType}
+                        </span>
+                      </td>
+                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fbbf24' }}>
+                        ₹{recPrice.toLocaleString('en-IN')}
+                      </td>
+                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#38bdf8' }}>
+                        ₹{sig.currentPrice.toLocaleString('en-IN')}
+                      </td>
+                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#f87171' }}>
+                        ₹{sig.stopLoss.toLocaleString('en-IN')}
+                      </td>
+                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#34d399' }}>
+                        ₹{sig.targetPrice.toLocaleString('en-IN')}
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <span className={`badge ${isHighProb ? 'badge-bullish' : 'badge-neutral'}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                          {isHighProb ? `🔥 ${sig.probSuccess}% HIGH PROB` : `${sig.probSuccess}%`}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        {isTargetHit ? (
+                          <span className="badge badge-bullish" style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem', background: '#34d399', color: '#000', fontWeight: 800 }}>
+                            ✓ TARGET HIT (Retained 2 Days)
+                          </span>
+                        ) : isSlHit ? (
+                          <span className="badge badge-bearish" style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem', background: '#f87171', color: '#fff', fontWeight: 800 }}>
+                            🛑 SL HIT (Retained 2 Days)
+                          </span>
+                        ) : (
+                          <span className="badge badge-bullish" style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
+                            ACTIVE (Tracking SL/TP)
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
