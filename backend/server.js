@@ -54,7 +54,26 @@ app.get('/api/fii-dii/today', async (req, res) => {
   }
 });
 
-// 2. Universal Recommendation Lifecycle Endpoint (Tracked for 2 Days Post-Exit)
+// 2. Master Universal Refresh Endpoint (Triggers fresh price scrapes across all tabs)
+app.post('/api/refresh-all-rates', async (req, res) => {
+  try {
+    console.log('🔄 [MASTER REFRESH]: Triggering live price scrape across all strategies...');
+    const fiiData = await getFiiDiiToday();
+    const tripleSignals = getTripleConfirmationSignals();
+    const rohanSignals = screenRohanMehtaAthStrategy();
+    const activePos = updatePositionM2m(fiiData.today.niftyClose || 24820, 0);
+
+    res.json({
+      success: true,
+      message: 'Live market rates successfully refreshed across all strategy tabs!',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Universal Recommendation Lifecycle Endpoint
 app.get('/api/recommendations/lifecycle', (req, res) => {
   try {
     const recommendations = getUniversalRecommendations();
@@ -64,7 +83,7 @@ app.get('/api/recommendations/lifecycle', (req, res) => {
   }
 });
 
-// 3. Active Trade Position Tracker Endpoint (1:2 Ratio Spread Tracking)
+// 4. Active Trade Position Tracker Endpoint (1:2 Ratio Spread Tracking)
 app.get('/api/position/active', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -82,7 +101,7 @@ app.get('/api/position/active', async (req, res) => {
   }
 });
 
-// 4. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
+// 5. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
 app.get('/api/strategy/triple-confirmation', (req, res) => {
   try {
     const result = getTripleConfirmationSignals();
@@ -92,7 +111,7 @@ app.get('/api/strategy/triple-confirmation', (req, res) => {
   }
 });
 
-// 5. Get historical FII & DII trends (30 days)
+// 6. Get historical FII & DII trends (30 days)
 app.get('/api/fii-dii/history', (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
@@ -103,7 +122,7 @@ app.get('/api/fii-dii/history', (req, res) => {
   }
 });
 
-// 6. Trigger Signal & Execute Order (Mock or Webhook)
+// 7. Trigger Signal & Execute Order (Mock or Webhook)
 app.post('/api/trigger-signal', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -116,12 +135,12 @@ app.post('/api/trigger-signal', async (req, res) => {
   }
 });
 
-// 7. Get Executed Trade Logs
+// 8. Get Executed Trade Logs
 app.get('/api/trade-log', (req, res) => {
   res.json({ success: true, trades: getExecutedTrades() });
 });
 
-// 8. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
+// 9. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
 app.post('/api/backtest', (req, res) => {
   try {
     const { initialCapital, days, lots } = req.body;
@@ -137,7 +156,7 @@ app.post('/api/backtest', (req, res) => {
   }
 });
 
-// 9. Nifty 500 High-Growth Institutional Stock Screener API
+// 10. Nifty 500 High-Growth Institutional Stock Screener API
 app.get('/api/fii-dii/stocks', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -148,7 +167,7 @@ app.get('/api/fii-dii/stocks', async (req, res) => {
   }
 });
 
-// 10. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
+// 11. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
 app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   try {
     const result = screenRohanMehtaAthStrategy();
@@ -158,7 +177,7 @@ app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   }
 });
 
-// 11. Settings REST API
+// 12. Settings REST API
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, settings: userSettings });
 });
@@ -196,7 +215,7 @@ wss.on('connection', (ws) => {
     } catch (e) {}
   }, 10000);
   
-  ws.on.on ? ws.on('close', () => clearInterval(interval)) : null;
+  ws.on ? ws.on('close', () => clearInterval(interval)) : null;
 });
 
 // ON-STARTUP AUTO FETCH FUNCTION

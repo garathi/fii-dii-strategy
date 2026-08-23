@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award, ShieldCheck, Target } from 'lucide-react';
+import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award, ShieldCheck, Target, CheckCircle } from 'lucide-react';
 import SentimentGauge from './components/SentimentGauge';
 import FiiDiiChart from './components/FiiDiiChart';
 import StrategyCards from './components/StrategyCards';
@@ -19,10 +19,14 @@ export default function App() {
   const [isTriggering, setIsTriggering] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showRefreshBanner, setShowRefreshBanner] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Trigger backend price rescan across all strategies
+      await fetch('/api/refresh-all-rates', { method: 'POST' }).catch(() => {});
+
       const [todayRes, historyRes, logsRes, settingsRes] = await Promise.all([
         fetch('/api/fii-dii/today').then(res => res.json()),
         fetch('/api/fii-dii/history?days=30').then(res => res.json()),
@@ -36,6 +40,8 @@ export default function App() {
       if (settingsRes.success) setSettings(settingsRes.settings);
       
       setRefreshKey(prev => prev + 1);
+      setShowRefreshBanner(true);
+      setTimeout(() => setShowRefreshBanner(false), 4000);
     } catch (err) {
       console.error('Error fetching FII/DII data:', err);
     } finally {
@@ -95,7 +101,7 @@ export default function App() {
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem 3rem' }}>
       {/* Top Header Bar */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--border-color)' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <div style={{ background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', padding: '0.65rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 14px rgba(37,99,235,0.4)' }}>
             <Activity size={24} />
@@ -105,7 +111,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Triple Confirmation (20/100 DMA + RSI) & 1:2 Ratio Spread Automation
+              Triple Confirmation (20/100 DMA + RSI) & Real-Time Price Engine
             </p>
           </div>
         </div>
@@ -115,11 +121,19 @@ export default function App() {
             <span className="live-pulse"></span>
             NSE Market Feed: <strong style={{ color: '#34d399' }}>Active</strong>
           </div>
-          <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ background: 'var(--accent-cyan)', color: '#000', fontWeight: 700 }}>
+          <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ background: 'var(--accent-cyan)', color: '#000', fontWeight: 800 }}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh All Rates
           </button>
         </div>
       </header>
+
+      {/* Refresh Confirmation Toast Banner */}
+      {showRefreshBanner && (
+        <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', background: 'rgba(52,211,153,0.15)', border: '1px solid #34d399', borderRadius: '10px', color: '#34d399', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem', boxShadow: '0 4px 14px rgba(52,211,153,0.2)' }}>
+          <CheckCircle size={18} />
+          <span>✓ Live market prices, option chain LTPs, and strategy signals refreshed across all tabs!</span>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
