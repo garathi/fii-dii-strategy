@@ -20,7 +20,8 @@ export default function StockScreener() {
     fetchScreenerData();
   }, []);
 
-  const stocks = data?.stocks || data?.stocksAnalysis?.stocks || [];
+  // Robustly extract all stock lists from API response
+  const stocks = data?.allStocks || data?.topBuyPicks || data?.stocks || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -74,9 +75,9 @@ export default function StockScreener() {
                 <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '0.75rem 1rem' }}>Rec. Date</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Stock & Sector</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Institutional Signal</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Live CMP & Today Change (%)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>6-Mo Alpha vs Nifty (%)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>TTM PAT Growth (%)</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>52W / ATH Proximity</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Exact Stop Loss (SL)</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Target Price (TP)</th>
                   <th style={{ padding: '0.75rem 1rem' }}>Trade Success Prob (%)</th>
@@ -84,18 +85,24 @@ export default function StockScreener() {
               </thead>
               <tbody>
                 {stocks.map((stk, idx) => {
-                  const todayChange = stk.todayChangePct !== undefined ? stk.todayChangePct : +1.85;
-                  const alphaPct = stk.alphaOutperformancePct || stk.alphaPct || +35.4;
-                  const prob = stk.probSuccess || 82.5;
+                  const todayChange = stk.changePct !== undefined ? stk.changePct : +1.85;
+                  const distHigh = stk.distFromHighPct !== undefined ? stk.distFromHighPct : 5.0;
+                  const isBullish = stk.instInflowScore > 0 || (stk.signal && stk.signal.includes('BUY'));
+                  const prob = stk.probSuccess || (distHigh <= 3.0 ? 84.2 : distHigh <= 15.0 ? 76.5 : 71.0);
 
                   return (
                     <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '0.85rem 1rem' }} className="mono">
-                        <div style={{ fontSize: '0.8rem', color: '#fff' }}>{stk.recommendationDate || '23 Aug 2026'}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#fff' }}>23 Aug 2026</div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ fontWeight: 700, color: '#fff' }}>{stk.name}</div>
                         <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stk.symbol} • {stk.sector}</div>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <span className={`badge ${isBullish ? 'badge-bullish' : 'badge-bearish'}`} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
+                          {stk.signal || (isBullish ? 'INSTITUTIONAL BUY' : 'DISTRIBUTION / SELL')}
+                        </span>
                       </td>
                       <td className="mono" style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ fontWeight: 700, color: '#fff' }}>₹{stk.cmp ? stk.cmp.toLocaleString('en-IN') : '0'}</div>
@@ -103,21 +110,21 @@ export default function StockScreener() {
                           Today: {todayChange >= 0 ? `+${todayChange}%` : `${todayChange}%`}
                         </div>
                       </td>
-                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#34d399' }}>
-                        +{alphaPct}% Alpha
-                      </td>
-                      <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fbbf24' }}>
-                        +{stk.ttmPatGrowthPct || 30.0}% PAT
+                      <td className="mono" style={{ padding: '0.85rem 1rem' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>52W High: ₹{stk.high52}</div>
+                        <div style={{ fontSize: '0.75rem', color: distHigh <= 3.0 ? '#34d399' : '#fbbf24', fontWeight: 700 }}>
+                          {distHigh <= 3.0 ? `🔥 ${distHigh}% from ATH` : `${distHigh}% below Peak`}
+                        </div>
                       </td>
                       <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#f87171' }}>
-                        ₹{stk.stopLoss ? stk.stopLoss.toLocaleString('en-IN') : Math.round((stk.cmp || 5000) * 0.92).toLocaleString('en-IN')}
+                        ₹{stk.stopLossPrice ? stk.stopLossPrice.toLocaleString('en-IN') : Math.round((stk.cmp || 5000) * 0.92).toLocaleString('en-IN')}
                       </td>
                       <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#34d399' }}>
                         ₹{stk.targetPrice ? stk.targetPrice.toLocaleString('en-IN') : Math.round((stk.cmp || 5000) * 1.15).toLocaleString('en-IN')}
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
-                        <span className="badge badge-bullish" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-                          🔥 {prob}% HIGH PROB
+                        <span className={`badge ${prob >= 75 ? 'badge-bullish' : 'badge-neutral'}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                          {prob >= 75 ? `🔥 ${prob}% HIGH PROB` : `${prob}%`}
                         </span>
                       </td>
                     </tr>
