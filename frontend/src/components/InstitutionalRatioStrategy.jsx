@@ -61,7 +61,7 @@ export default function InstitutionalRatioStrategy() {
               <Calendar size={13} /> Signal Generation Date
             </div>
             <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', marginTop: '0.2rem' }}>
-              22 Aug 2026 (Saturday)
+              {pos?.signalDate || 'N/A'}
             </div>
           </div>
 
@@ -70,7 +70,7 @@ export default function InstitutionalRatioStrategy() {
               <Clock size={13} /> Recommended Deployment
             </div>
             <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', marginTop: '0.2rem' }}>
-              25 Aug 2026 @ 09:30 AM IST
+              {pos?.deploymentDate || 'N/A'}
             </div>
           </div>
 
@@ -79,16 +79,16 @@ export default function InstitutionalRatioStrategy() {
               <Calendar size={13} /> Contract Expiry Date
             </div>
             <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fbbf24', marginTop: '0.2rem' }}>
-              25 Aug 2026 (Tuesday Expiry)
+              {pos?.expiryDate || 'N/A'}
             </div>
           </div>
 
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>
-              Required Margin (2 Lots)
+              Required Margin ({pos?.lots || 2} Lots)
             </div>
             <div className="mono" style={{ fontSize: '0.95rem', fontWeight: 700, color: '#34d399', marginTop: '0.2rem' }}>
-              ₹90,000 (130 Qty)
+              ₹{pos?.marginRequired?.toLocaleString('en-IN') || '90,000'} ({pos?.totalQty || 130} Qty)
             </div>
           </div>
         </div>
