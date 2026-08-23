@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award, ShieldCheck } from 'lucide-react';
+import { Activity, RefreshCw, BarChart2, Zap, Sliders, PlayCircle, Layers, Award, ShieldCheck, Target } from 'lucide-react';
 import SentimentGauge from './components/SentimentGauge';
 import FiiDiiChart from './components/FiiDiiChart';
 import StrategyCards from './components/StrategyCards';
@@ -8,6 +8,7 @@ import AutomationConfig from './components/AutomationConfig';
 import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
 import InstitutionalRatioStrategy from './components/InstitutionalRatioStrategy';
+import TripleConfirmationStrategy from './components/TripleConfirmationStrategy';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -104,7 +105,7 @@ export default function App() {
               FII & DII Strategy Automation
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Institutional Market Sentiment & Quantitative Strategy Automation
+              Triple Confirmation (20/100 DMA + RSI) & 1:2 Ratio Spread Automation
             </p>
           </div>
         </div>
@@ -130,6 +131,13 @@ export default function App() {
           <BarChart2 size={16} /> Live Dashboard (FII/DII Strategy)
         </button>
         <button
+          className={`btn-secondary ${activeTab === 'triple' ? 'btn-primary' : ''}`}
+          onClick={() => setActiveTab('triple')}
+          style={{ background: activeTab === 'triple' ? 'linear-gradient(135deg, #8b5cf6, #a78bfa)' : '' }}
+        >
+          <Target size={16} /> Triple Confirmation (20/100 DMA + RSI)
+        </button>
+        <button
           className={`btn-secondary ${activeTab === 'ratio' ? 'btn-primary' : ''}`}
           onClick={() => setActiveTab('ratio')}
           style={{ background: activeTab === 'ratio' ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : '' }}
@@ -139,7 +147,7 @@ export default function App() {
         <button
           className={`btn-secondary ${activeTab === 'rohan' ? 'btn-primary' : ''}`}
           onClick={() => setActiveTab('rohan')}
-          style={{ background: activeTab === 'rohan' ? 'linear-gradient(135deg, #8b5cf6, #ec4899)' : '' }}
+          style={{ background: activeTab === 'rohan' ? 'linear-gradient(135deg, #ec4899, #f43f5e)' : '' }}
         >
           <Award size={16} /> Rohan Mehta ATH Strategy
         </button>
@@ -186,6 +194,11 @@ export default function App() {
             isTriggering={isTriggering}
           />
         </>
+      )}
+
+      {/* Dedicated Triple Confirmation Strategy Tab */}
+      {activeTab === 'triple' && (
+        <TripleConfirmationStrategy key={`triple-${refreshKey}`} />
       )}
 
       {/* Dedicated 1:2 Ratio Strategy Tab */}

@@ -12,6 +12,7 @@ const { runRealBacktest, getRealNiftyHistory } = require('./services/backtestEng
 const { screenInstitutionalStocks } = require('./services/stockScreenerEngine');
 const { screenRohanMehtaAthStrategy } = require('./services/rohanMehtaAthEngine');
 const { getActivePositions, updatePositionM2m } = require('./services/tradeTrackerService');
+const { getTripleConfirmationSignals } = require('./services/tripleConfirmationEngine');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,7 +71,17 @@ app.get('/api/position/active', async (req, res) => {
   }
 });
 
-// 3. Get historical FII & DII trends (30 days)
+// 3. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
+app.get('/api/strategy/triple-confirmation', (req, res) => {
+  try {
+    const result = getTripleConfirmationSignals();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. Get historical FII & DII trends (30 days)
 app.get('/api/fii-dii/history', (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
@@ -81,7 +92,7 @@ app.get('/api/fii-dii/history', (req, res) => {
   }
 });
 
-// 4. Trigger Signal & Execute Order (Mock or Webhook)
+// 5. Trigger Signal & Execute Order (Mock or Webhook)
 app.post('/api/trigger-signal', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -94,12 +105,12 @@ app.post('/api/trigger-signal', async (req, res) => {
   }
 });
 
-// 5. Get Executed Trade Logs
+// 6. Get Executed Trade Logs
 app.get('/api/trade-log', (req, res) => {
   res.json({ success: true, trades: getExecutedTrades() });
 });
 
-// 6. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
+// 7. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
 app.post('/api/backtest', (req, res) => {
   try {
     const { initialCapital, days, lots } = req.body;
@@ -115,7 +126,7 @@ app.post('/api/backtest', (req, res) => {
   }
 });
 
-// 7. Nifty 500 High-Growth Institutional Stock Screener API
+// 8. Nifty 500 High-Growth Institutional Stock Screener API
 app.get('/api/fii-dii/stocks', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -126,7 +137,7 @@ app.get('/api/fii-dii/stocks', async (req, res) => {
   }
 });
 
-// 8. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
+// 9. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
 app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   try {
     const result = screenRohanMehtaAthStrategy();
@@ -136,7 +147,7 @@ app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   }
 });
 
-// 9. Settings REST API
+// 10. Settings REST API
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, settings: userSettings });
 });
@@ -183,8 +194,6 @@ async function runStartupAutoFetch() {
   try {
     const data = await getFiiDiiToday();
     console.log(`✓ [STARTUP SYNC COMPLETE]: FII Net: ₹${data.today.fii.netValue} Cr | DII Net: ₹${data.today.dii.netValue} Cr`);
-    const analysis = analyzeFiiDiiSentiment(data.today);
-    console.log(`✓ [STARTUP STRATEGY READY]: ${analysis.recommendedStrategy.name} (${analysis.recommendedStrategy.recommendedLots} Lots)`);
   } catch (err) {
     console.error('⚠️ Startup sync error:', err.message);
   }
