@@ -78,10 +78,10 @@ export default function RohanMehtaAthStrategy() {
       {/* Qualified Strict ATH Buy Recommendations */}
       <div className="glass-panel" style={{ padding: '1.75rem' }}>
         <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <TrendingUp size={18} style={{ color: '#34d399' }} /> Strict 100% All-Time High Qualified Buy Picks ({athData?.qualifiedBuyCount})
+          <TrendingUp size={18} style={{ color: '#34d399' }} /> Strict 100% All-Time High Qualified Buy Picks ({athData?.qualifiedCount})
         </h3>
 
-        {athData?.athBuyPicks?.length === 0 ? (
+        {athData?.strictQualifiers?.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
             No stocks currently meet the strict 0.0%-3.0% ATH proximity rule.
           </div>
@@ -100,7 +100,7 @@ export default function RohanMehtaAthStrategy() {
                 </tr>
               </thead>
               <tbody>
-                {athData?.athBuyPicks?.map((stock) => (
+                {athData?.strictQualifiers?.map((stock) => (
                   <tr key={stock.symbol} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '0.85rem 1rem' }}>
                       <div style={{ fontWeight: 700, color: '#fff' }}>{stock.symbol}</div>
@@ -155,11 +155,11 @@ export default function RohanMehtaAthStrategy() {
               </tr>
             </thead>
             <tbody>
-              {athData?.allAthStocks?.filter(s => !s.signal.includes('BUY'))?.map((stock) => (
+              {athData?.allCandidates?.filter(s => !s.status?.includes('BUY'))?.map((stock) => (
                 <tr key={stock.symbol} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fff' }}>{stock.symbol}</td>
                   <td className="mono" style={{ padding: '0.85rem 1rem', color: '#fff' }}>₹{stock.cmp?.toLocaleString('en-IN')}</td>
-                  <td className="mono" style={{ padding: '0.85rem 1rem', color: '#fbbf24' }}>₹{stock.peakHigh?.toLocaleString('en-IN')}</td>
+                  <td className="mono" style={{ padding: '0.85rem 1rem', color: '#fbbf24' }}>₹{stock.peakAth?.toLocaleString('en-IN')}</td>
                   <td className="mono" style={{ padding: '0.85rem 1rem', color: '#f87171' }}>-{stock.distFromAthPct}% below ATH</td>
                   <td style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
                     {stock.actionAdvice}

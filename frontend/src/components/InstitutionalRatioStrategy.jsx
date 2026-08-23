@@ -115,27 +115,29 @@ export default function InstitutionalRatioStrategy() {
             </thead>
             <tbody>
               {pos?.legs?.map((leg, idx) => {
-                const diff = leg.currentLtp - leg.entryPrice;
-                const isProfitableLeg = leg.action === 'SELL' ? diff <= 0 : diff >= 0;
+                const action = leg.type && leg.type.startsWith('SELL') ? 'SELL' : 'BUY';
+                const lots = Math.abs(leg.qty) / (pos?.lotSize || 65);
+                const diff = leg.currentLtp - leg.entryLtp;
+                const isProfitableLeg = action === 'SELL' ? diff <= 0 : diff >= 0;
 
                 return (
                   <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '0.85rem 1rem' }}>
-                      <span className={`badge ${leg.action === 'BUY' ? 'badge-bullish' : 'badge-bearish'}`}>
-                        {leg.action} {leg.lots}x
+                      <span className={`badge ${action === 'BUY' ? 'badge-bullish' : 'badge-bearish'}`}>
+                        {action} {lots}x
                       </span>
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fff' }}>
                       NIFTY {leg.strike} {leg.optionType}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', color: 'var(--text-secondary)' }}>
-                      {leg.lots * 2} Lots ({leg.qty * 2} Qty)
+                      {lots} Lots ({Math.abs(leg.qty)} Qty)
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fbbf24' }}>
-                      ₹{leg.entryPrice.toFixed(2)}
+                      ₹{leg.entryLtp?.toFixed(2)}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#38bdf8' }}>
-                      ₹{leg.currentLtp.toFixed(2)}
+                      ₹{leg.currentLtp?.toFixed(2)}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: isProfitableLeg ? '#34d399' : '#f87171' }}>
                       {diff >= 0 ? `+₹${diff.toFixed(2)}` : `-₹${Math.abs(diff).toFixed(2)}`}
