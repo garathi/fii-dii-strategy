@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "postinstall": "npm install --prefix backend && npm install --prefix frontend",
-    "build": "pip3 install -r requirements.txt || pip install -r requirements.txt; npm run build --prefix frontend",
+    "build": "python3 -m venv venv && ./venv/bin/pip install -r requirements.txt || python -m venv venv && venv\\Scripts\\pip install -r requirements.txt; npm run build --prefix frontend",
     "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^25.8.0"
   }
 }

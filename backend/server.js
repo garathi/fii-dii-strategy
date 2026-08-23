@@ -7,12 +7,21 @@ const cron = require('node-cron');
 const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 
-// Detect correct Python binary (python3 on Linux/Render, python on Windows)
+// Detect correct Python binary
 let PYTHON_BIN = 'python3';
-try { execFileSync('python3', ['--version']); } catch (e) {
-  try { execFileSync('python', ['--version']); PYTHON_BIN = 'python'; } catch (e2) {
-    console.warn('⚠️  No Python binary found — live screener will serve cached JSON');
-    PYTHON_BIN = null;
+const venvLinux = path.join(__dirname, '..', 'venv', 'bin', 'python');
+const venvWin = path.join(__dirname, '..', 'venv', 'Scripts', 'python.exe');
+
+if (fs.existsSync(venvLinux)) {
+  PYTHON_BIN = venvLinux;
+} else if (fs.existsSync(venvWin)) {
+  PYTHON_BIN = venvWin;
+} else {
+  try { execFileSync('python3', ['--version']); } catch (e) {
+    try { execFileSync('python', ['--version']); PYTHON_BIN = 'python'; } catch (e2) {
+      console.warn('⚠️  No Python binary found — live screener will serve cached JSON');
+      PYTHON_BIN = null;
+    }
   }
 }
 console.log(`🐍 Python binary: ${PYTHON_BIN || 'NONE (using cached JSON)'}`);
