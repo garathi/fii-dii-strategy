@@ -13,6 +13,7 @@ const { screenInstitutionalStocks } = require('./services/stockScreenerEngine');
 const { screenRohanMehtaAthStrategy } = require('./services/rohanMehtaAthEngine');
 const { getActivePositions, updatePositionM2m } = require('./services/tradeTrackerService');
 const { getTripleConfirmationSignals } = require('./services/tripleConfirmationEngine');
+const { getUniversalRecommendations } = require('./services/recommendationLifecycleService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,7 +54,17 @@ app.get('/api/fii-dii/today', async (req, res) => {
   }
 });
 
-// 2. Active Trade Position Tracker Endpoint (1:2 Ratio Spread Tracking)
+// 2. Universal Recommendation Lifecycle Endpoint (Tracked for 2 Days Post-Exit)
+app.get('/api/recommendations/lifecycle', (req, res) => {
+  try {
+    const recommendations = getUniversalRecommendations();
+    res.json({ success: true, recommendations, timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Active Trade Position Tracker Endpoint (1:2 Ratio Spread Tracking)
 app.get('/api/position/active', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -71,7 +82,7 @@ app.get('/api/position/active', async (req, res) => {
   }
 });
 
-// 3. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
+// 4. 20 DMA + 100 DMA + RSI Triple Confirmation Strategy API Endpoint
 app.get('/api/strategy/triple-confirmation', (req, res) => {
   try {
     const result = getTripleConfirmationSignals();
@@ -81,7 +92,7 @@ app.get('/api/strategy/triple-confirmation', (req, res) => {
   }
 });
 
-// 4. Get historical FII & DII trends (30 days)
+// 5. Get historical FII & DII trends (30 days)
 app.get('/api/fii-dii/history', (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
@@ -92,7 +103,7 @@ app.get('/api/fii-dii/history', (req, res) => {
   }
 });
 
-// 5. Trigger Signal & Execute Order (Mock or Webhook)
+// 6. Trigger Signal & Execute Order (Mock or Webhook)
 app.post('/api/trigger-signal', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -105,12 +116,12 @@ app.post('/api/trigger-signal', async (req, res) => {
   }
 });
 
-// 6. Get Executed Trade Logs
+// 7. Get Executed Trade Logs
 app.get('/api/trade-log', (req, res) => {
   res.json({ success: true, trades: getExecutedTrades() });
 });
 
-// 7. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
+// 8. Run Strategy Backtest Simulator (Real Yahoo Finance Data)
 app.post('/api/backtest', (req, res) => {
   try {
     const { initialCapital, days, lots } = req.body;
@@ -126,7 +137,7 @@ app.post('/api/backtest', (req, res) => {
   }
 });
 
-// 8. Nifty 500 High-Growth Institutional Stock Screener API
+// 9. Nifty 500 High-Growth Institutional Stock Screener API
 app.get('/api/fii-dii/stocks', async (req, res) => {
   try {
     const data = await getFiiDiiToday();
@@ -137,7 +148,7 @@ app.get('/api/fii-dii/stocks', async (req, res) => {
   }
 });
 
-// 9. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
+// 10. Rohan Mehta ₹1500 Cr Quantitative ATH & ATH Profit Strategy API
 app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   try {
     const result = screenRohanMehtaAthStrategy();
@@ -147,7 +158,7 @@ app.get('/api/strategy/rohan-mehta-ath', (req, res) => {
   }
 });
 
-// 10. Settings REST API
+// 11. Settings REST API
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, settings: userSettings });
 });
@@ -185,7 +196,7 @@ wss.on('connection', (ws) => {
     } catch (e) {}
   }, 10000);
   
-  ws.on('close', () => clearInterval(interval));
+  ws.on.on ? ws.on('close', () => clearInterval(interval)) : null;
 });
 
 // ON-STARTUP AUTO FETCH FUNCTION

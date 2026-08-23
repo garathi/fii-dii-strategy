@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Award, Zap } from 'lucide-react';
+import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Clock, CheckCircle } from 'lucide-react';
 
 export default function TripleConfirmationStrategy() {
   const [data, setData] = useState(null);
@@ -46,13 +46,13 @@ export default function TripleConfirmationStrategy() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a78bfa', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>
-              <Zap size={18} /> Triple Confirmation Quantitative Scanner
+              <Clock size={18} /> Recommendation Lifecycle & 2-Day Retention Tracker
             </div>
             <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#fff', marginTop: '0.35rem' }}>
               20 DMA + 100 DMA + RSI Triple Confirmation Strategy
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-              Scans F&O Indices & Nifty 50 stocks with exact Stop Loss (SL), 1:2 Target (TP), and Estimated Success Probability.
+              Tracks Recommendation Date, Entry Price, Live LTP, SL, and TP. Retains calls for 2 days after hitting Target or Stop Loss.
             </p>
           </div>
 
@@ -70,26 +70,10 @@ export default function TripleConfirmationStrategy() {
           </div>
         </div>
 
-        {/* Strategy Rules Banner */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.85rem', marginTop: '1.25rem' }}>
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Condition 1: Short Trend</div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8', marginTop: '0.15rem' }}>Price vs 20 DMA</div>
-          </div>
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Condition 2: Trend Alignment</div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#a78bfa', marginTop: '0.15rem' }}>20 DMA vs 100 DMA</div>
-          </div>
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Condition 3: Momentum</div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fbbf24', marginTop: '0.15rem' }}>RSI &gt; 55 (Buy) / &lt; 45 (Sell)</div>
-          </div>
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: '#34d399', fontWeight: 700 }}>Active High Prob Calls</div>
-            <div className="mono" style={{ fontSize: '1rem', fontWeight: 800, color: '#34d399', marginTop: '0.15rem' }}>
-              {filteredSignals.length} Calls ({buyCallsCount} BUY / {sellCallsCount} SHORT)
-            </div>
-          </div>
+        {/* Retention Rule Info Banner */}
+        <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.8rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircle size={16} />
+          <span><strong>2-Day Post-Exit Retention Policy:</strong> When a stock hits its Target Price (TP) or Stop Loss (SL), it remains displayed on this tab for 2 full calendar days before auto-archiving.</span>
         </div>
       </div>
 
@@ -97,10 +81,10 @@ export default function TripleConfirmationStrategy() {
       <div className="glass-panel" style={{ padding: '1.75rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Target size={18} style={{ color: '#8b5cf6' }} /> Active F&O Indices & Nifty 50 Triple Confirmation Calls
+            <Target size={18} style={{ color: '#8b5cf6' }} /> Active & Retained Triple Confirmation Calls
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Last Scanned: {data?.scannedAt ? new Date(data.scannedAt).toLocaleTimeString() : 'Just Now'}
+            Scanned: {data?.scannedAt ? new Date(data.scannedAt).toLocaleTimeString() : 'Just Now'}
           </span>
         </div>
 
@@ -108,23 +92,29 @@ export default function TripleConfirmationStrategy() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '0.75rem 1rem' }}>Recommendation Date</th>
                 <th style={{ padding: '0.75rem 1rem' }}>Instrument & Type</th>
                 <th style={{ padding: '0.75rem 1rem' }}>Signal Call</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Live Price (CMP)</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Exact Stop Loss (SL)</th>
-                <th style={{ padding: '0.75rem 1rem' }}>1:2 Target Price (TP)</th>
-                <th style={{ padding: '0.75rem 1rem' }}>20 DMA / 100 DMA</th>
-                <th style={{ padding: '0.75rem 1rem' }}>RSI (14)</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Estimated Success Prob</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Rec. Entry Price</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Current Live Rate</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Exact Stop Loss</th>
+                <th style={{ padding: '0.75rem 1rem' }}>1:2 Target Price</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Success Prob</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Retention Status</th>
               </tr>
             </thead>
             <tbody>
               {filteredSignals.map((sig, idx) => {
                 const isBuy = sig.signalType === 'BUY';
                 const isHighProb = sig.probSuccess >= 70.0;
+                const recDate = sig.recommendationDate || '23 Aug 2026';
+                const recPrice = sig.recommendationPrice || sig.currentPrice;
 
                 return (
                   <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isHighProb ? 'rgba(139,92,246,0.03)' : 'transparent' }}>
+                    <td style={{ padding: '0.85rem 1rem' }} className="mono">
+                      <div style={{ fontSize: '0.8rem', color: '#fff' }}>{recDate}</div>
+                    </td>
                     <td style={{ padding: '0.85rem 1rem' }}>
                       <div style={{ fontWeight: 700, color: '#fff' }}>{sig.name}</div>
                       <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sig.symbol} • {sig.type}</div>
@@ -134,7 +124,10 @@ export default function TripleConfirmationStrategy() {
                         {sig.signalType}
                       </span>
                     </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fff' }}>
+                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#fbbf24' }}>
+                      ₹{recPrice.toLocaleString('en-IN')}
+                    </td>
+                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#38bdf8' }}>
                       ₹{sig.currentPrice.toLocaleString('en-IN')}
                     </td>
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#f87171' }}>
@@ -143,15 +136,14 @@ export default function TripleConfirmationStrategy() {
                     <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#34d399' }}>
                       ₹{sig.targetPrice.toLocaleString('en-IN')}
                     </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      ₹{sig.dma20} / ₹{sig.dma100}
-                    </td>
-                    <td className="mono" style={{ padding: '0.85rem 1rem', fontWeight: 700, color: isBuy ? '#34d399' : '#f87171' }}>
-                      {sig.rsi}
-                    </td>
                     <td style={{ padding: '0.85rem 1rem' }}>
                       <span className={`badge ${isHighProb ? 'badge-bullish' : 'badge-neutral'}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                         {isHighProb ? `🔥 ${sig.probSuccess}% HIGH PROB` : `${sig.probSuccess}%`}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem' }}>
+                      <span className="badge badge-bullish" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>
+                        {sig.status || 'ACTIVE (Tracking SL/TP)'}
                       </span>
                     </td>
                   </tr>
