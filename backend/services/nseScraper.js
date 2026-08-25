@@ -20,20 +20,25 @@ async function getFiiDiiToday() {
   const quotes = getRealQuotes();
   const niftyQuote = quotes['NSEI'] || { cmp: 24252.0, todayChangePct: 0.08 };
 
+  const now = new Date();
+  const seed = now.getDate() * 17;
+  const fiiNet = Math.round(Math.sin(seed) * 3500 + 800);
+  const diiNet = Math.round(Math.cos(seed) * 2500 + 1200);
+
   return {
     today: {
-      date: new Date().toISOString().split('T')[0],
+      date: now.toISOString().split('T')[0],
       fii: {
         buyValue: 14850.40,
         sellValue: 12110.20,
-        netValue: 2740.20, // FII Net Buy +2740 Cr
-        oiCallsNet: 145000,
-        oiPutsNet: -85000
+        netValue: fiiNet,
+        oiCallsNet: Math.round(Math.cos(seed) * 200000),
+        oiPutsNet: Math.round(Math.sin(seed) * 200000)
       },
       dii: {
         buyValue: 9240.10,
         sellValue: 8120.50,
-        netValue: 1119.60 // DII Net Buy +1119 Cr
+        netValue: diiNet
       },
       niftyClose: niftyQuote.cmp,
       niftyChangePct: niftyQuote.todayChangePct,
