@@ -1,9 +1,26 @@
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
-// In-memory trade log
-const executedTrades = [];
+// Persistent trade log
+const LOG_FILE = path.join(__dirname, '..', 'trade_logs.json');
+
+function getExecutedTrades() {
+  if (fs.existsSync(LOG_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(LOG_FILE, 'utf-8'));
+    } catch (e) {}
+  }
+  return [];
+}
+
+function saveExecutedTrades(trades) {
+  fs.writeFileSync(LOG_FILE, JSON.stringify(trades, null, 2));
+}
 
 async function triggerSignalAlert(signalData, settings = {}) {
+  const trades = getExecutedTrades();
+  
   const logEntry = {
     id: 'TRD-' + Date.now().toString().slice(-6),
     timestamp: new Date().toLocaleDateString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -15,8 +32,9 @@ async function triggerSignalAlert(signalData, settings = {}) {
     legs: signalData.recommendedStrategy.legs
   };
   
-  executedTrades.unshift(logEntry);
-  if (executedTrades.length > 50) executedTrades.pop();
+  trades.unshift(logEntry);
+  if (trades.length > 50) trades.pop();
+  saveExecutedTrades(trades);
 
   const results = {
     mockExecution: true,
@@ -62,13 +80,6 @@ async function triggerSignalAlert(signalData, settings = {}) {
 
   return results;
 }
-
-function getExecutedTrades() {
-  return executedTrades;
-}
-
-const path = require('path');
-const fs = require('fs');
 
 const STATE_FILE = path.join(__dirname, '..', 'alert_state.json');
 
