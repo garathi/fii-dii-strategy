@@ -146,6 +146,16 @@ function analyzeFiiDiiSentiment(todayData, defaultLots = 2, expiryDay = 'Tuesday
     };
   }
 
+  // Inject specific dates and entry price targets for the UI
+  const now = new Date();
+  const nextTradingDay = new Date(now);
+  nextTradingDay.setDate(now.getDate() + (now.getDay() === 5 ? 3 : now.getDay() === 6 ? 2 : 1));
+  const formattedNextDay = nextTradingDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  recommendedStrategy.deploymentDate = `${formattedNextDay} @ 09:30 AM IST`;
+  recommendedStrategy.recommendedEntryPremium = `₹${recommendedStrategy.netPremium}`;
+  recommendedStrategy.estimatedExecutionPrice = `₹${Math.max(0, recommendedStrategy.netPremium - 5)} - ₹${recommendedStrategy.netPremium + 8}`;
+
   return {
     fiiNet,
     diiNet,

@@ -32,6 +32,22 @@ export default function StrategyCards({ strategy, tradeLogs = [], onTriggerSigna
           {strategy.actionAdvice}
         </p>
 
+        {/* Execution Guidance */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+          <div style={{ background: 'rgba(56, 189, 248, 0.05)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.15)' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Target Deployment Date</div>
+            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.deploymentDate}</div>
+          </div>
+          <div style={{ background: 'rgba(52, 211, 153, 0.05)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(52, 211, 153, 0.15)' }}>
+            <div style={{ fontSize: '0.65rem', color: '#34d399', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Ideal Net Premium</div>
+            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.recommendedEntryPremium}</div>
+          </div>
+          <div style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+            <div style={{ fontSize: '0.65rem', color: '#fbbf24', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Estimated 9:30 AM LTP</div>
+            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.estimatedExecutionPrice}</div>
+          </div>
+        </div>
+
         {/* Option Legs Table */}
         <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.4rem' }}>
