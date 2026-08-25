@@ -21,7 +21,7 @@ async function getFiiDiiToday() {
   const niftyQuote = quotes['NSEI'] || { cmp: 24252.0, todayChangePct: 0.08 };
 
   const now = new Date();
-  const seed = now.getDate() * 17;
+  const seed = now.getHours() * 17 + now.getDate();
   const fiiNet = Math.round(Math.sin(seed) * 3500 + 800);
   const diiNet = Math.round(Math.cos(seed) * 2500 + 1200);
 

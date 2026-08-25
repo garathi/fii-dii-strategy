@@ -266,9 +266,9 @@ async function runStartupAutoFetch() {
 
 cron.schedule('0 * * * *', async () => {
   console.log('⏰ [CRON]: Hourly scan running (24/7)...');
-  runPythonScript('fetch_real_live_quotes.py');
-  runPythonScript('live_nifty500_screener.py');
-  runPythonScript('scan_inr_currency_triple.py');
+  await runPythonScript('fetch_real_live_quotes.py');
+  await runPythonScript('live_nifty500_screener.py');
+  await runPythonScript('scan_inr_currency_triple.py');
   
   try {
     const data = await getFiiDiiToday();
