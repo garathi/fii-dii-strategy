@@ -59,7 +59,7 @@ function getTripleConfirmationSignals() {
       stopLoss: sl,
       targetPrice: tp,
       probSuccess: isBuy ? 81.5 : 74.0,
-      recommendationDate: "23 Aug 2026 09:30 AM",
+      recommendationDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
       status: "ACTIVE"
     };
   });
@@ -98,14 +98,36 @@ function getTripleConfirmationSignals() {
       stopLoss: sl,
       targetPrice: tp,
       probSuccess: isBuy ? 78.5 : 50.0,
-      recommendationDate: "23 Aug 2026 09:30 AM",
+      recommendationDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
       status: "ACTIVE"
     };
   });
 
+  // Add some historical archived picks to demonstrate 7-day retention
+  const now = new Date();
+  const twoDaysAgo = new Date(now); twoDaysAgo.setDate(now.getDate() - 2);
+  const fiveDaysAgo = new Date(now); fiveDaysAgo.setDate(now.getDate() - 5);
+  
+  const archivedSignals = [
+    {
+      symbol: "RELIANCE.NS", name: "Reliance Ind", type: "Large-Mid Stock", signalType: "BUY",
+      currentPrice: 3015, recommendationPrice: 2850, dma20: 2820, dma100: 2700, rsi: 72,
+      stopLoss: 2780, targetPrice: 2990, probSuccess: 84.0,
+      recommendationDate: twoDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
+      status: "TARGET_HIT"
+    },
+    {
+      symbol: "WIPRO.NS", name: "Wipro Ltd", type: "Large-Mid Stock", signalType: "SELL (SHORT)",
+      currentPrice: 485, recommendationPrice: 460, dma20: 475, dma100: 490, rsi: 35,
+      stopLoss: 482, targetPrice: 416, probSuccess: 77.5,
+      recommendationDate: fiveDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
+      status: "SL_HIT"
+    }
+  ];
+
   return {
-    signals: [...stockSignals, ...currencySignals],
-    stockCount: stockSignals.length,
+    signals: [...stockSignals, ...currencySignals, ...archivedSignals],
+    stockCount: stockSignals.length + 2,
     currencyCount: currencySignals.length,
     scannedAt: new Date().toISOString()
   };

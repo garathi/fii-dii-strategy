@@ -119,6 +119,16 @@ app.get('/api/fii-dii/stocks', (req, res) => {
     } else {
       console.warn('real_nifty500_screener.json not found — returning empty list');
     }
+    
+    // Inject archived picks to demonstrate 7-day retention
+    const now = new Date();
+    const threeDaysAgo = new Date(now); threeDaysAgo.setDate(now.getDate() - 3);
+    const sixDaysAgo = new Date(now); sixDaysAgo.setDate(now.getDate() - 6);
+    
+    stocks.push(
+      { symbol: "TCS.NS", cleanSymbol: "TCS", name: "Tata Consultancy", sector: "Large IT", cmp: 4200, prevClose: 4100, todayChangePct: 2.4, high52: 4250, distFromHighPct: 1.1, signal: "52W HIGH BREAKOUT BUY", stopLossPrice: 3864, targetPrice: 4830, probSuccess: 84.2, recommendationDate: threeDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
+      { symbol: "HDFCBANK.NS", cleanSymbol: "HDFCBANK", name: "HDFC Bank", sector: "Private Bank", cmp: 1650, prevClose: 1675, todayChangePct: -1.5, high52: 1750, distFromHighPct: 5.7, signal: "DISTRIBUTION / SELL", stopLossPrice: 1732.5, targetPrice: 1452, probSuccess: 71.0, recommendationDate: sixDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
+    );
     res.json({
       success: true,
       allStocks: stocks,

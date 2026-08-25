@@ -93,7 +93,7 @@ export default function StockScreener() {
                   return (
                     <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '0.85rem 1rem' }} className="mono">
-                        <div style={{ fontSize: '0.8rem', color: '#fff' }}>23 Aug 2026</div>
+                        <div style={{ fontSize: '0.8rem', color: '#fff' }}>{stk.recommendationDate || 'Just Now'}</div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ fontWeight: 700, color: '#fff' }}>{stk.name}</div>
