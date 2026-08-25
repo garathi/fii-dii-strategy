@@ -38,7 +38,7 @@ function screenRohanMehtaAthStrategy() {
       peakAth: peakAth,
       distFromAthPct: distPct,
       isStrictAth: isStrictAth,
-      recommendationDate: "23 Aug 2026",
+      recommendationDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       recommendationPrice: cmp,
       trailingStopLossPrice: Math.round(cmp * 0.88), // 12% Trailing SL
       targetPrice: Math.round(cmp * 1.25),  // 25% Profit Target

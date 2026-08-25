@@ -36,14 +36,26 @@ function updatePositionM2m(niftySpotOverride, vixOverride) {
   const totalQty = 130; // 2 Lots (65 qty per lot)
   const totalM2mRs = Math.round(m2mPerQty * totalQty);
 
+  const now = new Date();
+  const getFormatted = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  
+  const signalDateObj = new Date(now);
+  signalDateObj.setDate(now.getDate() - 3); // 3 days ago
+
+  const deploymentDateObj = new Date(now);
+  deploymentDateObj.setDate(now.getDate() - 1); // 1 day ago
+
+  const expiryDateObj = new Date(now);
+  expiryDateObj.setDate(now.getDate() + 2); // 2 days in future
+  
   return [
     {
       tradeId: "POS-2026-NIFTY-RATIO-01",
       strategyName: "1:2 Upgraded Ratio Spread + VIX Circuit Breaker",
       underlyingSymbol: "NIFTY 50",
-      signalDate: "20 Aug 2026 (Thursday)",
-      deploymentDate: "20 Aug 2026 14:00 PM IST",
-      expiryDate: "27 Aug 2026 (Thursday Expiry)",
+      signalDate: `${getFormatted(signalDateObj)} (EOD)`,
+      deploymentDate: `${getFormatted(deploymentDateObj)} 09:30 AM IST`,
+      expiryDate: `${getFormatted(expiryDateObj)} (Expiry)`,
       currentSpotPrice: currentSpot,
       entrySpotPrice: 24250.00,
       lots: 2,

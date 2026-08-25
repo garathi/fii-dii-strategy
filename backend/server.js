@@ -63,18 +63,26 @@ const realQuotesPath = path.join(__dirname, 'real_live_market_quotes.json');
 const { exec } = require('child_process');
 
 function runPythonScript(scriptName) {
-  if (!PYTHON_BIN) return false;
-  const scriptPath = path.join(__dirname, scriptName);
-  if (!fs.existsSync(scriptPath)) { console.warn(`Script not found: ${scriptName}`); return false; }
-  
-  exec(`${PYTHON_BIN} "${scriptPath}"`, { encoding: 'utf-8', timeout: 60000 }, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`⚠️  Error running ${scriptName}: ${error.message.substring(0, 200)}`);
-      return;
+  return new Promise((resolve, reject) => {
+    if (!PYTHON_BIN) {
+      console.warn('⚠️ No Python binary available.');
+      return resolve(false);
     }
-    console.log(`✓ [Python] ${scriptName} done`);
+    const scriptPath = path.join(__dirname, scriptName);
+    if (!fs.existsSync(scriptPath)) { 
+      console.warn(`Script not found: ${scriptName}`); 
+      return resolve(false); 
+    }
+    
+    exec(`${PYTHON_BIN} "${scriptPath}"`, { encoding: 'utf-8', timeout: 60000 }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`⚠️  Error running ${scriptName}: ${error.message.substring(0, 200)}`);
+        return resolve(false);
+      }
+      console.log(`✓ [Python] ${scriptName} done`);
+      resolve(true);
+    });
   });
-  return true;
 }
 
 // 1. FII/DII Today
@@ -92,9 +100,9 @@ app.get('/api/fii-dii/today', async (req, res) => {
 app.post('/api/refresh-all-rates', async (req, res) => {
   try {
     console.log('🔄 [MASTER REFRESH]: Running live price scans...');
-    runPythonScript('fetch_real_live_quotes.py');
-    runPythonScript('live_nifty500_screener.py');
-    runPythonScript('scan_inr_currency_triple.py');
+    await runPythonScript('fetch_real_live_quotes.py');
+    await runPythonScript('live_nifty500_screener.py');
+    await runPythonScript('scan_inr_currency_triple.py');
     res.json({ success: true, message: 'Live market rates refreshed across all strategy tabs!', timestamp: new Date().toISOString() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
