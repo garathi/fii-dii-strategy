@@ -175,18 +175,39 @@ function analyzeFiiDiiSentiment(todayData, defaultLots = 2, expiryDay = 'Tuesday
   
   let hint = '';
   let hintColor = '';
-  if (variancePct > 25) {
-    hint = 'STAY AWAY (Premium gapped up too high, R:R destroyed)';
-    hintColor = 'var(--accent-red)';
-  } else if (variancePct > 10) {
-    hint = 'HOLD (Wait for intraday retracement before entering)';
-    hintColor = 'var(--accent-orange)';
-  } else if (variancePct >= 0) {
-    hint = 'ENTER NOW (Optimal Entry Zone)';
-    hintColor = 'var(--accent-green)';
+  
+  const isCreditSpread = recommendedStrategy.type.includes('HEDGE') || recommendedStrategy.name.includes('Iron Condor');
+  
+  if (isCreditSpread) {
+    // For Credit Spreads, collecting MORE premium is better.
+    if (variancePct < -25) {
+      hint = 'STAY AWAY (Credit collapsed, R:R destroyed)';
+      hintColor = 'var(--accent-red)';
+    } else if (variancePct < -10) {
+      hint = 'HOLD (Wait for premium to spike before selling)';
+      hintColor = 'var(--accent-orange)';
+    } else if (variancePct <= 0) {
+      hint = 'ENTER NOW (Acceptable Credit Zone)';
+      hintColor = 'var(--accent-green)';
+    } else {
+      hint = 'ENTER NOW (Spiked Premium / Higher Credit Collected!)';
+      hintColor = 'var(--accent-green)';
+    }
   } else {
-    hint = 'ENTER NOW (Discounted Premium / Better Risk-Reward)';
-    hintColor = 'var(--accent-green)';
+    // For Debit Spreads (Bull Call / Bear Put), paying LESS premium is better.
+    if (variancePct > 25) {
+      hint = 'STAY AWAY (Premium gapped up too high, R:R destroyed)';
+      hintColor = 'var(--accent-red)';
+    } else if (variancePct > 10) {
+      hint = 'HOLD (Wait for intraday retracement before entering)';
+      hintColor = 'var(--accent-orange)';
+    } else if (variancePct >= 0) {
+      hint = 'ENTER NOW (Optimal Entry Zone)';
+      hintColor = 'var(--accent-green)';
+    } else {
+      hint = 'ENTER NOW (Discounted Premium / Cheaper Entry!)';
+      hintColor = 'var(--accent-green)';
+    }
   }
 
   recommendedStrategy.liveExecutionHint = hint;
