@@ -39,12 +39,50 @@ export default function StrategyCards({ strategy, tradeLogs = [], onTriggerSigna
             <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.deploymentDate}</div>
           </div>
           <div style={{ background: 'rgba(52, 211, 153, 0.05)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(52, 211, 153, 0.15)' }}>
-            <div style={{ fontSize: '0.65rem', color: '#34d399', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Ideal Net Premium</div>
-            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.recommendedEntryPremium}</div>
+            <div style={{ fontSize: '0.65rem', color: '#34d399', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Rec. Entry Premium</div>
+            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>₹{strategy.recommendedEntryPremium}</div>
           </div>
           <div style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
-            <div style={{ fontSize: '0.65rem', color: '#fbbf24', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Estimated 9:30 AM LTP</div>
-            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>{strategy.estimatedExecutionPrice}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.65rem', color: '#fbbf24', textTransform: 'uppercase', fontWeight: 700 }}>Live Premium (Now)</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: strategy.variancePct > 0 ? '#f87171' : '#34d399' }}>
+                {strategy.variancePct > 0 ? '+' : ''}{strategy.variancePct}%
+              </span>
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>₹{strategy.liveCurrentPremium}</div>
+          </div>
+        </div>
+
+        {/* Live Execution Hint Banner */}
+        <div style={{ 
+          background: `color-mix(in srgb, ${strategy.liveExecutionHintColor || '#34d399'} 15%, transparent)`,
+          border: `1px solid ${strategy.liveExecutionHintColor || '#34d399'}`,
+          borderRadius: '12px',
+          padding: '0.85rem 1.25rem',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem'
+        }}>
+          <div style={{ 
+            background: strategy.liveExecutionHintColor || '#34d399',
+            color: '#000',
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 800,
+            fontSize: '14px'
+          }}>!</div>
+          <div>
+            <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700, color: strategy.liveExecutionHintColor || '#34d399', letterSpacing: '0.05em' }}>
+              Action Hint based on Live Variance
+            </div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', marginTop: '0.1rem' }}>
+              {strategy.liveExecutionHint}
+            </div>
           </div>
         </div>
 

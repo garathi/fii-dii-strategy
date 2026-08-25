@@ -153,8 +153,45 @@ function analyzeFiiDiiSentiment(todayData, defaultLots = 2, expiryDay = 'Tuesday
   const formattedNextDay = nextTradingDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   recommendedStrategy.deploymentDate = `${formattedNextDay} @ 09:30 AM IST`;
-  recommendedStrategy.recommendedEntryPremium = `₹${recommendedStrategy.netPremium}`;
-  recommendedStrategy.estimatedExecutionPrice = `₹${Math.max(0, recommendedStrategy.netPremium - 5)} - ₹${recommendedStrategy.netPremium + 8}`;
+  recommendedStrategy.recommendedEntryPremium = recommendedStrategy.netPremium;
+  
+  // Simulate live premium variance based on today's Nifty Change %
+  // (In a real system, this would fetch the live LTPs of the specific CE/PE legs)
+  let niftyVarianceFactor = 1.0;
+  const change = Math.abs(todayData.niftyChangePct || 0.1);
+  if (recommendedStrategy.type.includes('BULLISH')) {
+    niftyVarianceFactor = 1 + (todayData.niftyChangePct > 0 ? (change * 1.5) : -(change * 1.2));
+  } else if (recommendedStrategy.type.includes('BEARISH')) {
+    niftyVarianceFactor = 1 + (todayData.niftyChangePct < 0 ? (change * 1.5) : -(change * 1.2));
+  } else {
+    // Sideways strategies benefit from small moves
+    niftyVarianceFactor = 1 + (change > 0.5 ? (change * 1.8) : -(change * 0.5));
+  }
+
+  const livePremiumRaw = recommendedStrategy.netPremium * niftyVarianceFactor;
+  recommendedStrategy.liveCurrentPremium = Math.round(livePremiumRaw * 10) / 10;
+  
+  const variancePct = ((recommendedStrategy.liveCurrentPremium - recommendedStrategy.recommendedEntryPremium) / recommendedStrategy.recommendedEntryPremium) * 100;
+  
+  let hint = '';
+  let hintColor = '';
+  if (variancePct > 25) {
+    hint = 'STAY AWAY (Premium gapped up too high, R:R destroyed)';
+    hintColor = 'var(--accent-red)';
+  } else if (variancePct > 10) {
+    hint = 'HOLD (Wait for intraday retracement before entering)';
+    hintColor = 'var(--accent-orange)';
+  } else if (variancePct >= 0) {
+    hint = 'ENTER NOW (Optimal Entry Zone)';
+    hintColor = 'var(--accent-green)';
+  } else {
+    hint = 'ENTER NOW (Discounted Premium / Better Risk-Reward)';
+    hintColor = 'var(--accent-green)';
+  }
+
+  recommendedStrategy.liveExecutionHint = hint;
+  recommendedStrategy.liveExecutionHintColor = hintColor;
+  recommendedStrategy.variancePct = Math.round(variancePct * 10) / 10;
 
   return {
     fiiNet,
