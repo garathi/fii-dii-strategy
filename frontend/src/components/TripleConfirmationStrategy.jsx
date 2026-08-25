@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Target, ShieldAlert, TrendingUp, TrendingDown, RefreshCw, Filter, Clock, CheckCircle, Globe } from 'lucide-react';
+import Loader from './Loader';
 
 export default function TripleConfirmationStrategy() {
   const [data, setData] = useState(null);
@@ -146,9 +147,7 @@ export default function TripleConfirmationStrategy() {
         </div>
 
         {loading && filteredSignals.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            Scanning NSE Currency Pairs & Stocks...
-          </div>
+          <Loader message="Scanning NSE Currency Pairs & Stocks..." minHeight="200px" />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>

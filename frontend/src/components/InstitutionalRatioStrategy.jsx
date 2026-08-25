@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Calendar, Clock, RefreshCw, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
+import Loader from './Loader';
 
 export default function InstitutionalRatioStrategy() {
   const [positionData, setPositionData] = useState(null);
@@ -23,11 +24,7 @@ export default function InstitutionalRatioStrategy() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Loading 1:2 Institutional Ratio Spread Strategy Specs & Rates...
-      </div>
-    );
+    return <Loader message="Loading 1:2 Institutional Ratio Spread Strategy Specs & Rates..." />;
   }
 
   const pos = positionData?.positions?.[0];

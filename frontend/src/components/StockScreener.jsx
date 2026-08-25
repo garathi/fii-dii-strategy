@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, TrendingUp, ShieldAlert, Award, RefreshCw, Filter, CheckCircle } from 'lucide-react';
+import Loader from './Loader';
 
 export default function StockScreener() {
   const [data, setData] = useState(null);
@@ -64,9 +65,7 @@ export default function StockScreener() {
       {/* Stock Table */}
       <div className="glass-panel" style={{ padding: '1.75rem' }}>
         {loading && stocks.length === 0 ? (
-          <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            Loading Nifty 500 High-Alpha Stock List...
-          </div>
+          <Loader message="Loading Nifty 500 High-Alpha Stock List..." minHeight="200px" />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>

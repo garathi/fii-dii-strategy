@@ -9,6 +9,7 @@ import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
 import InstitutionalRatioStrategy from './components/InstitutionalRatioStrategy';
 import TripleConfirmationStrategy from './components/TripleConfirmationStrategy';
+import Loader from './components/Loader';
 
 export default function App() {
   const [todayData, setTodayData] = useState(null);
@@ -190,24 +191,28 @@ export default function App() {
 
       {/* Live Dashboard Tab: Pure FII/DII Strategy Recommendation */}
       {activeTab === 'dashboard' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            <SentimentGauge
-              analysis={todayData?.analysis}
-              rawData={todayData?.raw}
+        loading && !todayData ? (
+          <Loader message="Fetching Live Market Rates and FII/DII Data..." minHeight="500px" />
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <SentimentGauge
+                analysis={todayData?.analysis}
+                rawData={todayData?.raw}
+                onTriggerSignal={handleTriggerSignal}
+                isTriggering={isTriggering}
+              />
+              <FiiDiiChart history={historyData} />
+            </div>
+
+            <StrategyCards
+              strategy={todayData?.analysis?.recommendedStrategy}
+              tradeLogs={tradeLogs}
               onTriggerSignal={handleTriggerSignal}
               isTriggering={isTriggering}
             />
-            <FiiDiiChart history={historyData} />
-          </div>
-
-          <StrategyCards
-            strategy={todayData?.analysis?.recommendedStrategy}
-            tradeLogs={tradeLogs}
-            onTriggerSignal={handleTriggerSignal}
-            isTriggering={isTriggering}
-          />
-        </>
+          </>
+        )
       )}
 
       {/* Dedicated Triple Confirmation Strategy Tab */}

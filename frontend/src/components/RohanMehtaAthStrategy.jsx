@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, ShieldAlert, CheckCircle, TrendingUp, AlertTriangle, XCircle } from 'lucide-react';
+import Loader from './Loader';
 
 export default function RohanMehtaAthStrategy() {
   const [athData, setAthData] = useState(null);
@@ -17,9 +18,7 @@ export default function RohanMehtaAthStrategy() {
 
   if (loading) {
     return (
-      <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Scanning Nifty 500 & Sensex 500 for STRICT 100% All-Time High Stocks...
-      </div>
+      <Loader message="Scanning Nifty 500 for Strict 3% ATH Qualifiers..." minHeight="200px" />
     );
   }
 
