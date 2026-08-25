@@ -125,9 +125,17 @@ app.get('/api/fii-dii/stocks', (req, res) => {
     const threeDaysAgo = new Date(now); threeDaysAgo.setDate(now.getDate() - 3);
     const sixDaysAgo = new Date(now); sixDaysAgo.setDate(now.getDate() - 6);
     
+    let trentCmp = 2930;
+    let persCmp = 5655;
+    try {
+      const q = JSON.parse(fs.readFileSync(realQuotesPath, 'utf-8'));
+      if (q['TRENT']) trentCmp = q['TRENT'].cmp;
+      if (q['PERSISTENT']) persCmp = q['PERSISTENT'].cmp;
+    } catch(e) {}
+    
     stocks.push(
-      { symbol: "TCS.NS", cleanSymbol: "TCS", name: "Tata Consultancy", sector: "Large IT", cmp: 4200, prevClose: 4100, todayChangePct: 2.4, high52: 4250, distFromHighPct: 1.1, signal: "52W HIGH BREAKOUT BUY", stopLossPrice: 3864, targetPrice: 4830, probSuccess: 84.2, recommendationDate: threeDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
-      { symbol: "HDFCBANK.NS", cleanSymbol: "HDFCBANK", name: "HDFC Bank", sector: "Private Bank", cmp: 1650, prevClose: 1675, todayChangePct: -1.5, high52: 1750, distFromHighPct: 5.7, signal: "DISTRIBUTION / SELL", stopLossPrice: 1732.5, targetPrice: 1452, probSuccess: 71.0, recommendationDate: sixDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
+      { symbol: "TRENT.NS", cleanSymbol: "TRENT", name: "Trent Ltd", sector: "Retail & Consumer", cmp: trentCmp, prevClose: trentCmp * 0.98, todayChangePct: 2.4, high52: trentCmp * 1.05, distFromHighPct: 1.1, signal: "52W HIGH BREAKOUT BUY", stopLossPrice: Math.round(trentCmp * 0.92), targetPrice: Math.round(trentCmp * 1.15), probSuccess: 84.2, recommendationDate: threeDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
+      { symbol: "PERSISTENT.NS", cleanSymbol: "PERSISTENT", name: "Persistent Systems", sector: "Midcap IT", cmp: persCmp, prevClose: persCmp * 1.02, todayChangePct: -1.5, high52: persCmp * 1.10, distFromHighPct: 5.7, signal: "DISTRIBUTION / SELL", stopLossPrice: Math.round(persCmp * 1.05), targetPrice: Math.round(persCmp * 0.88), probSuccess: 71.0, recommendationDate: sixDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }
     );
     res.json({
       success: true,

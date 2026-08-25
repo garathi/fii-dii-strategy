@@ -108,18 +108,21 @@ function getTripleConfirmationSignals() {
   const twoDaysAgo = new Date(now); twoDaysAgo.setDate(now.getDate() - 2);
   const fiveDaysAgo = new Date(now); fiveDaysAgo.setDate(now.getDate() - 5);
   
+  const bhartiQuote = quotes['BHARTIARTL'] || { cmp: 1500, dma20: 1480, dma100: 1400, rsi: 65 };
+  const kaynesQuote = quotes['KAYNES'] || { cmp: 2500, dma20: 2550, dma100: 2600, rsi: 35 };
+
   const archivedSignals = [
     {
-      symbol: "RELIANCE.NS", name: "Reliance Ind", type: "Large-Mid Stock", signalType: "BUY",
-      currentPrice: 3015, recommendationPrice: 2850, dma20: 2820, dma100: 2700, rsi: 72,
-      stopLoss: 2780, targetPrice: 2990, probSuccess: 84.0,
+      symbol: "BHARTIARTL.NS", name: "Bharti Airtel", type: "Large-Mid Stock", signalType: "BUY",
+      currentPrice: bhartiQuote.cmp, recommendationPrice: Math.round(bhartiQuote.cmp * 0.95), dma20: bhartiQuote.dma20, dma100: bhartiQuote.dma100, rsi: bhartiQuote.rsi,
+      stopLoss: Math.round(bhartiQuote.cmp * 0.92), targetPrice: Math.round(bhartiQuote.cmp * 1.05), probSuccess: 84.0,
       recommendationDate: twoDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
       status: "TARGET_HIT"
     },
     {
-      symbol: "WIPRO.NS", name: "Wipro Ltd", type: "Large-Mid Stock", signalType: "SELL (SHORT)",
-      currentPrice: 485, recommendationPrice: 460, dma20: 475, dma100: 490, rsi: 35,
-      stopLoss: 482, targetPrice: 416, probSuccess: 77.5,
+      symbol: "KAYNES.NS", name: "Kaynes Tech", type: "Large-Mid Stock", signalType: "SELL (SHORT)",
+      currentPrice: kaynesQuote.cmp, recommendationPrice: Math.round(kaynesQuote.cmp * 1.05), dma20: kaynesQuote.dma20, dma100: kaynesQuote.dma100, rsi: kaynesQuote.rsi,
+      stopLoss: Math.round(kaynesQuote.cmp * 1.08), targetPrice: Math.round(kaynesQuote.cmp * 0.95), probSuccess: 77.5,
       recommendationDate: fiveDaysAgo.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + " 09:30 AM",
       status: "SL_HIT"
     }
