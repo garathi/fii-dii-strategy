@@ -146,13 +146,38 @@ function analyzeFiiDiiSentiment(todayData, defaultLots = 2, expiryDay = 'Tuesday
     };
   }
 
-  // Inject specific dates and entry price targets for the UI
+  // Inject specific dates and entry price targets for the UI based on Market Hours (IST)
   const now = new Date();
-  const nextTradingDay = new Date(now);
-  nextTradingDay.setDate(now.getDate() + (now.getDay() === 5 ? 3 : now.getDay() === 6 ? 2 : 1));
-  const formattedNextDay = nextTradingDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-  recommendedStrategy.deploymentDate = `${formattedNextDay} @ 09:30 AM IST`;
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const istNow = new Date(utc + (3600000 * 5.5)); // Convert to IST
+  
+  let targetDate = new Date(istNow);
+  const day = istNow.getDay();
+  const hours = istNow.getHours();
+  const minutes = istNow.getMinutes();
+  
+  const isWeekend = day === 0 || day === 6;
+  const isAfterHours = hours > 15 || (hours === 15 && minutes >= 15);
+  const isPreMarket = hours < 9 || (hours === 9 && minutes < 15);
+  const isMarketOpen = !isWeekend && !isAfterHours && !isPreMarket;
+  
+  if (isWeekend || isAfterHours) {
+    let daysToAdd = 1;
+    if (day === 5) daysToAdd = 3; // Friday -> Monday
+    else if (day === 6) daysToAdd = 2; // Saturday -> Monday
+    
+    targetDate.setDate(istNow.getDate() + daysToAdd);
+  }
+  
+  const formattedDate = targetDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeString = isMarketOpen ? "NOW (Live Market)" : "09:30 AM IST";
+  
+  recommendedStrategy.deploymentDate = `${formattedDate} @ ${timeString}`;
+  
+  // Make action advice dynamic based on market open/close
+  if (isMarketOpen) {
+    recommendedStrategy.actionAdvice = recommendedStrategy.actionAdvice.replace('at 9:30 AM', 'NOW at Current Market Price');
+  }
   recommendedStrategy.recommendedEntryPremium = recommendedStrategy.netPremium;
   
   // Simulate live premium variance based on today's Nifty Change %
