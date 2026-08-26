@@ -51,19 +51,35 @@ def fetch_all_live_prices():
             latest = df.iloc[-1]
             prev = df.iloc[-2]
 
-            close_price = round(float(latest['Close']), 2)
-            prev_close = round(float(prev['Close']), 2)
-            daily_change_pct = round(((close_price - prev_close) / prev_close) * 100, 2)
-            high_52 = round(float(df['High'].max()), 2)
-            dist_from_ath = round(((high_52 - close_price) / high_52) * 100, 2)
+            import math
+            def safe_float(val, fallback=0.0):
+                try:
+                    f = float(val)
+                    return fallback if math.isnan(f) else f
+                except:
+                    return fallback
+
+            close_price = round(safe_float(latest['Close']), 2)
+            prev_close = round(safe_float(prev['Close']), 2)
+            
+            if prev_close > 0 and close_price > 0:
+                daily_change_pct = round(((close_price - prev_close) / prev_close) * 100, 2)
+            else:
+                daily_change_pct = 0.0
+                
+            high_52 = round(safe_float(df['High'].max()), 2)
+            if high_52 > 0 and close_price > 0:
+                dist_from_ath = round(((high_52 - close_price) / high_52) * 100, 2)
+            else:
+                dist_from_ath = 0.0
 
             df['DMA20'] = df['Close'].rolling(window=20).mean()
             df['DMA100'] = df['Close'].rolling(window=100).mean()
             df['RSI'] = calculate_rsi(df['Close'], 14)
 
-            dma20 = round(float(df['DMA20'].iloc[-1]), 2) if len(df) >= 20 else close_price
-            dma100 = round(float(df['DMA100'].iloc[-1]), 2) if len(df) >= 100 else close_price
-            rsi = round(float(df['RSI'].iloc[-1]), 2) if len(df) >= 14 else 50.0
+            dma20 = round(safe_float(df['DMA20'].iloc[-1]), 2) if len(df) >= 20 else close_price
+            dma100 = round(safe_float(df['DMA100'].iloc[-1]), 2) if len(df) >= 100 else close_price
+            rsi = round(safe_float(df['RSI'].iloc[-1]), 2) if len(df) >= 14 else 50.0
 
             clean_symbol = sym.replace(".NS", "").replace("=X", "").replace("^", "")
 

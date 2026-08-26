@@ -36,11 +36,27 @@ def generate_live_screener_json():
             latest = df.iloc[-1]
             prev = df.iloc[-2]
 
-            cmp_val = round(float(latest['Close']), 2)
-            prev_close = round(float(prev['Close']), 2)
-            today_change = round(((cmp_val - prev_close) / prev_close) * 100, 2)
-            high_52 = round(float(df['High'].max()), 2)
-            dist_ath = round(((high_52 - cmp_val) / high_52) * 100, 2)
+            import math
+            def safe_float(val, fallback=0.0):
+                try:
+                    f = float(val)
+                    return fallback if math.isnan(f) else f
+                except:
+                    return fallback
+
+            cmp_val = round(safe_float(latest['Close']), 2)
+            prev_close = round(safe_float(prev['Close']), 2)
+            
+            if prev_close > 0 and cmp_val > 0:
+                today_change = round(((cmp_val - prev_close) / prev_close) * 100, 2)
+            else:
+                today_change = 0.0
+                
+            high_52 = round(safe_float(df['High'].max()), 2)
+            if high_52 > 0 and cmp_val > 0:
+                dist_ath = round(((high_52 - cmp_val) / high_52) * 100, 2)
+            else:
+                dist_ath = 0.0
 
             is_buy = dist_ath <= 15.0
             signal_text = "52W HIGH BREAKOUT BUY" if dist_ath <= 3.0 else ("INSTITUTIONAL BUY" if is_buy else "DISTRIBUTION / SELL")
