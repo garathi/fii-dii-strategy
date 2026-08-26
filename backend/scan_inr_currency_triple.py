@@ -113,9 +113,15 @@ def scan_currency_triple_confirmation():
     for sig in currency_signals:
         print(f"  [{sig['signalType']}] {sig['name']}: Rate ₹{sig['currentPrice']} | SL ₹{sig['stopLoss']} | Target ₹{sig['targetPrice']} | Prob: {sig['probSuccess']}%")
 
+    if not currency_signals:
+        print("⚠️ CRITICAL: Yahoo Finance returned empty data for currency signals (Rate Limited). Aborting save to preserve cache.")
+        sys.exit(1)
+
     output_path = os.path.join(os.path.dirname(__file__), 'inr_currency_signals.json')
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump({"signals": currency_signals, "scannedAt": pd.Timestamp.now().isoformat()}, f, indent=2)
+        json.dump({"signals": currency_signals, "timestamp": pd.Timestamp.now().isoformat()}, f, indent=2)
+
+    print(f"\n✓ Saved {len(currency_signals)} Currency Signals to inr_currency_signals.json")
 
 if __name__ == "__main__":
     scan_currency_triple_confirmation()

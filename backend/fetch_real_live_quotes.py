@@ -85,6 +85,10 @@ def fetch_all_live_prices():
         except Exception as e:
             print(f"Error fetching {sym}: {e}")
 
+    if not live_data:
+        print("⚠️ CRITICAL: Yahoo Finance returned empty data for all symbols (Likely Rate Limited). Aborting save to preserve cache.")
+        sys.exit(1)
+
     output_path = os.path.join(os.path.dirname(__file__), 'real_live_market_quotes.json')
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(live_data, f, indent=2)

@@ -70,6 +70,10 @@ def generate_live_screener_json():
         except Exception as e:
             print(f"Error {sym}: {e}")
 
+    if not results:
+        print("⚠️ CRITICAL: Yahoo Finance returned empty data for screener (Rate Limited). Aborting save to preserve cache.")
+        sys.exit(1)
+
     output_path = os.path.join(os.path.dirname(__file__), 'real_nifty500_screener.json')
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump({"stocks": results, "timestamp": pd.Timestamp.now().isoformat()}, f, indent=2)
