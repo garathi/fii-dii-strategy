@@ -43,6 +43,39 @@ def calculate_rsi(series, period=14):
     rs = gain / loss
     return 100 - (100 / (1 + rs))
 
+def check_knoxville_divergence(df, lookback=150):
+    if len(df) < lookback:
+        return False
+        
+    df['MOM20'] = df['Close'] - df['Close'].shift(20)
+    df['RSI21'] = calculate_rsi(df['Close'], 21)
+    
+    current_rsi = safe_float(df['RSI21'].iloc[-1])
+    current_price = safe_float(df['Close'].iloc[-1])
+    current_mom = safe_float(df['MOM20'].iloc[-1])
+    
+    # Bullish Divergence requires RSI to be heavily oversold (<= 35 in Indian markets)
+    if current_rsi > 35 or math.isnan(current_rsi):
+        return False
+        
+    window = df.iloc[-lookback:-1] # Past 150 days excluding today
+    if window.empty:
+        return False
+        
+    # Find the historical minimum price in the lookback window
+    min_idx = window['Close'].idxmin()
+    if pd.isna(min_idx):
+        return False
+        
+    min_price_in_window = safe_float(window.loc[min_idx, 'Close'])
+    mom_at_min_price = safe_float(window.loc[min_idx, 'MOM20'])
+    
+    # Divergence: Price is a Lower Low, but Momentum is a Higher Low
+    if current_price < min_price_in_window and current_mom > mom_at_min_price:
+        return True
+        
+    return False
+
 def calculate_macd(series, fast=12, slow=26, signal=9):
     fast_ema = series.ewm(span=fast, adjust=False).mean()
     slow_ema = series.ewm(span=slow, adjust=False).mean()
@@ -116,6 +149,9 @@ def generate_hemant_swing_signals():
             env_upper = sma20 * 1.05
             is_envelope_pullback = cmp_val <= env_lower
 
+            # 6. Rob Booker Knoxville Divergence
+            is_knox_div = check_knoxville_divergence(df, lookback=150)
+
             # Qualification check
             qualified = is_uptrend and is_rsi_pullback and is_vol_spike and is_macd_bullish and is_envelope_pullback
 
@@ -132,13 +168,15 @@ def generate_hemant_swing_signals():
                 "macdBullish": is_macd_bullish,
                 "envLower": round(env_lower, 2),
                 "isEnvPullback": is_envelope_pullback,
+                "isKnoxDiv": is_knox_div,
                 "isTechnicalQualified": qualified,
                 "isQualified": False, # Will be determined after fundamental scan
                 "ttmProfitCr": 0,
                 "scannedAt": pd.Timestamp.now().strftime('%d %b %Y %H:%M')
             }
             # To avoid cluttering the UI with 200 failed stocks, only add nearly-qualified stocks
-            if is_uptrend and is_rsi_pullback:
+            # If it has Knoxville divergence, definitely add it even if trend failed!
+            if is_knox_div or (is_uptrend and is_rsi_pullback):
                 results.append(stock_obj)
             
         except Exception as e:

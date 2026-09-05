@@ -58,6 +58,7 @@ export default function HemantSwingStrategy() {
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>TREND (50/200 EMA)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>ENVELOPE (20 SMA - 5%)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>RSI PULLBACK (40-60)</th>
+                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>RB KNOX DIV</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>VOLUME SPIKE</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>NET PROFIT (TTM)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>STATUS</th>
@@ -89,6 +90,15 @@ export default function HemantSwingStrategy() {
                     <span style={{ color: (stock.rsi >= 40 && stock.rsi <= 60) ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
                       {stock.rsi}
                     </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    {stock.isKnoxDiv ? (
+                      <span className="badge badge-bullish" style={{ backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                        <TrendingUp size={12} /> BULLISH DIV
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>None</span>
+                    )}
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: stock.volumeSpike >= 1.5 ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
