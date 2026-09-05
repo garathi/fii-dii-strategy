@@ -9,23 +9,25 @@ import math
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-# Target symbols for Nifty 500 subset (for demonstration we use our configured pool, 
-# in production this can be expanded to all 500 symbols via a CSV).
-STOCKS_CONFIG = [
-    {"symbol": "HAL.NS", "cleanSymbol": "HAL", "name": "Hindustan Aeronautics"},
-    {"symbol": "SOLARINDS.NS", "cleanSymbol": "SOLARINDS", "name": "Solar Industries"},
-    {"symbol": "POLYCAB.NS", "cleanSymbol": "POLYCAB", "name": "Polycab India"},
-    {"symbol": "MCX.NS", "cleanSymbol": "MCX", "name": "Multi Commodity Exchange"},
-    {"symbol": "CDSL.NS", "cleanSymbol": "CDSL", "name": "CDSL India"},
-    {"symbol": "BHARTIARTL.NS", "cleanSymbol": "BHARTIARTL", "name": "Bharti Airtel"},
-    {"symbol": "BSE.NS", "cleanSymbol": "BSE", "name": "BSE Limited"},
-    {"symbol": "PERSISTENT.NS", "cleanSymbol": "PERSISTENT", "name": "Persistent Systems"},
-    {" অঙ্গ": "DIXON.NS", "cleanSymbol": "DIXON", "name": "Dixon Technologies"},
-    {"symbol": "TRENT.NS", "cleanSymbol": "TRENT", "name": "Trent Ltd"}
+# Top 150 Liquid Nifty F&O Symbols for Swing Scanning
+NIFTY_SYMBOLS = [
+    "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE",
+    "ITC", "BHARTIARTL", "KOTAKBANK", "LT", "AXISBANK", "ASIANPAINT", "MARUTI", "SUNPHARMA",
+    "TITAN", "ULTRACEMCO", "TATUMOTORS", "BAJAJFINSV", "WIPRO", "NESTLEIND", "HCLTECH", "ONGC",
+    "ADANIENT", "NTPC", "JSWSTEEL", "POWERGRID", "M&M", "TATAAIG", "TATASTEEL", "COALINDIA",
+    "HINDALCO", "GRASIM", "TECHM", "CIPLA", "APOLLOHOSP", "DIVISLAB", "EICHERMOT", "BAJAJ-AUTO",
+    "BRITANNIA", "HEROMOTOCO", "INDUSINDBK", "DRREDDY", "HDFCLIFE", "SBILIFE", "BPCL", "UPL",
+    "HAL", "SOLARINDS", "POLYCAB", "MCX", "CDSL", "BSE", "PERSISTENT", "DIXON", "TRENT",
+    "BEL", "PIDILITIND", "SIEMENS", "GODREJCP", "CHOLAFIN", "PNB", "BANKBARODA", "ZOMATO",
+    "TVSMOTOR", "CUMMINSIND", "INDIGO", "SHREECEM", "HAVELLS", "PFC", "RECLTD", "GAIL",
+    "BOSCHLTD", "DLF", "AMBUJACEM", "ABB", "TORNTPHARM", "LODHA", "CGPOWER", "AUBANK",
+    "TATACOMM", "SRF", "MARICO", "COLPAL", "PAGEIND", "VOLTAS", "MOTHERSON", "MAXHEALTH",
+    "PETRONET", "MUTHOOTFIN", "TRENT", "ESCORTS", "PIIND", "NAUKRI", "MCDOWELL-N", "CONCOR",
+    "MRF", "ICICIPRULI", "ASTRAL", "AUROPHARMA", "LUPIN", "NMDC", "IGL", "MGL", "GUJGASLTD",
+    "BANDHANBNK", "FEDERALBNK", "IDFCFIRSTB", "CANBK", "UNIONBANK", "INDIANB", "PNB",
+    "SAIL", "VEDL", "JINDALSTEL", "TATACHEMICALS", "DEEPAKNTR", "NAVINFLUOR", "AARTIIND",
+    "TATAELXSI", "MPHASIS", "COFORGE", "LTIM", "PERSISTENT", "BSOFT", "LTTS"
 ]
-
-# Quick fix for dictionary key typo
-STOCKS_CONFIG[8]["symbol"] = "DIXON.NS"
 
 def safe_float(val, fallback=0.0):
     try:
@@ -49,14 +51,29 @@ def calculate_macd(series, fast=12, slow=26, signal=9):
     return macd, macd_signal
 
 def generate_hemant_swing_signals():
-    print("--- SCANNING FOR HEMANT JAIN VALUE SWING TRADES ---")
+    print(f"--- SCANNING {len(NIFTY_SYMBOLS)} STOCKS FOR HEMANT JAIN VALUE SWING TRADES ---")
     results = []
-
-    for item in STOCKS_CONFIG:
-        sym = item["symbol"]
+    
+    # De-duplicate
+    unique_symbols = list(set(NIFTY_SYMBOLS))
+    yf_tickers = [sym + ".NS" for sym in unique_symbols]
+    
+    print("Downloading batch history data from Yahoo Finance...")
+    try:
+        data = yf.download(yf_tickers, period="1y", group_by="ticker", auto_adjust=True, progress=False)
+    except Exception as e:
+        print(f"Error downloading data: {e}")
+        sys.exit(1)
+        
+    for sym in unique_symbols:
+        ns_sym = sym + ".NS"
         try:
-            ticker = yf.Ticker(sym)
-            df = ticker.history(period="1y")
+            # Handle yfinance DataFrame structure (if multiple tickers, it's a MultiIndex)
+            if len(unique_symbols) > 1:
+                df = data[ns_sym].dropna()
+            else:
+                df = data.dropna()
+                
             if df.empty or len(df) < 200:
                 continue
 
@@ -104,9 +121,9 @@ def generate_hemant_swing_signals():
 
             # Always add to results so UI can show the scanned list and why it failed/passed
             stock_obj = {
-                "symbol": sym,
-                "cleanSymbol": item["cleanSymbol"],
-                "name": item["name"],
+                "symbol": ns_sym,
+                "cleanSymbol": sym,
+                "name": sym, # Using symbol as name since we don't have full names for all 200
                 "cmp": cmp_val,
                 "ema50": round(ema50, 2),
                 "ema200": round(ema200, 2),
@@ -118,13 +135,17 @@ def generate_hemant_swing_signals():
                 "isQualified": qualified,
                 "scannedAt": pd.Timestamp.now().strftime('%d %b %Y %H:%M')
             }
-            results.append(stock_obj)
+            # To avoid cluttering the UI with 200 failed stocks, only add qualified or nearly-qualified stocks
+            # (e.g. at least uptrend + RSI pullback)
+            if is_uptrend and is_rsi_pullback:
+                results.append(stock_obj)
             
-            status = "✅ QUALIFIED" if qualified else "❌ FAILED"
-            print(f"  {status} {item['cleanSymbol']}: CMP ₹{cmp_val} | RSI {rsi} | VolSpike {vol_spike_ratio}x")
+            if qualified:
+                print(f"  ✅ QUALIFIED {sym}: CMP ₹{cmp_val} | RSI {rsi} | VolSpike {vol_spike_ratio}x")
 
         except Exception as e:
-            print(f"Error {sym}: {e}")
+            # Silent continue for missing individual tickers in batch
+            continue
 
     if not results:
         print("⚠️ CRITICAL: Yahoo Finance returned empty data (Rate Limited). Aborting save.")

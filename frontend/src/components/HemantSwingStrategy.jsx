@@ -80,7 +80,7 @@ export default function HemantSwingStrategy() {
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ color: stock.isEnvPullback ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
-                      {stock.isEnvPullback ? 'Inside Value Zone' : 'Too High'}
+                      {stock.isEnvPullback ? 'Inside Value Zone' : 'Outside Zone'}
                     </span>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lower Env: ₹{stock.envLower}</div>
                   </td>
