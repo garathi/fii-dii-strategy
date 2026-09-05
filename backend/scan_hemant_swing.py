@@ -92,8 +92,15 @@ def generate_hemant_swing_signals():
             macd_sig_val = safe_float(macd_sig.iloc[-1])
             is_macd_bullish = macd_val > macd_sig_val
 
+            # 5. Envelope Strategy (20 SMA +/- 5%)
+            df['SMA20'] = df['Close'].rolling(window=20).mean()
+            sma20 = safe_float(df['SMA20'].iloc[-1])
+            env_lower = sma20 * 0.95
+            env_upper = sma20 * 1.05
+            is_envelope_pullback = cmp_val <= env_lower
+
             # Qualification check
-            qualified = is_uptrend and is_rsi_pullback and is_vol_spike and is_macd_bullish
+            qualified = is_uptrend and is_rsi_pullback and is_vol_spike and is_macd_bullish and is_envelope_pullback
 
             # Always add to results so UI can show the scanned list and why it failed/passed
             stock_obj = {
@@ -106,6 +113,8 @@ def generate_hemant_swing_signals():
                 "rsi": rsi,
                 "volumeSpike": vol_spike_ratio,
                 "macdBullish": is_macd_bullish,
+                "envLower": round(env_lower, 2),
+                "isEnvPullback": is_envelope_pullback,
                 "isQualified": qualified,
                 "scannedAt": pd.Timestamp.now().strftime('%d %b %Y %H:%M')
             }

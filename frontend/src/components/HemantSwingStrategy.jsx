@@ -56,6 +56,7 @@ export default function HemantSwingStrategy() {
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>STOCK / COMPANY</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>CMP</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>TREND (50/200 EMA)</th>
+                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>ENVELOPE (20 SMA - 5%)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>RSI PULLBACK (40-60)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>VOLUME SPIKE</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>STATUS</th>
@@ -76,6 +77,12 @@ export default function HemantSwingStrategy() {
                       {(stock.cmp > stock.ema50 && stock.ema50 > stock.ema200) ? 'Uptrend' : 'Failed'}
                     </span>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>50: {stock.ema50} | 200: {stock.ema200}</div>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ color: stock.isEnvPullback ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
+                      {stock.isEnvPullback ? 'Inside Value Zone' : 'Too High'}
+                    </span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lower Env: ₹{stock.envLower}</div>
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ color: (stock.rsi >= 40 && stock.rsi <= 60) ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
