@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { TrendingUp, Activity, BarChart2, CheckCircle2, XCircle } from 'lucide-react';
 import Loader from './Loader';
 
@@ -10,8 +9,9 @@ export default function HemantSwingStrategy() {
   const fetchSignals = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5000/api/screener/hemant-swing');
-      setData(res.data);
+      const res = await fetch('/api/screener/hemant-swing');
+      const jsonData = await res.json();
+      setData(jsonData);
     } catch (err) {
       console.error(err);
     } finally {
