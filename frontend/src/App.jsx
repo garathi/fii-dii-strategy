@@ -9,6 +9,7 @@ import StockScreener from './components/StockScreener';
 import RohanMehtaAthStrategy from './components/RohanMehtaAthStrategy';
 import InstitutionalRatioStrategy from './components/InstitutionalRatioStrategy';
 import TripleConfirmationStrategy from './components/TripleConfirmationStrategy';
+import HemantSwingStrategy from './components/HemantSwingStrategy';
 import Loader from './components/Loader';
 
 export default function App() {
@@ -167,6 +168,13 @@ export default function App() {
           <Award size={16} /> Rohan Mehta ATH Strategy
         </button>
         <button
+          className={`btn-secondary ${activeTab === 'hemant' ? 'btn-primary' : ''}`}
+          onClick={() => setActiveTab('hemant')}
+          style={{ background: activeTab === 'hemant' ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)' : '' }}
+        >
+          <Zap size={16} /> Hemant Jain Value Swing
+        </button>
+        <button
           className={`btn-secondary ${activeTab === 'stocks' ? 'btn-primary' : ''}`}
           onClick={() => setActiveTab('stocks')}
           style={{ background: activeTab === 'stocks' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '' }}
@@ -228,6 +236,11 @@ export default function App() {
       {/* Rohan Mehta ATH Strategy Tab */}
       {activeTab === 'rohan' && (
         <RohanMehtaAthStrategy key={`rohan-${refreshKey}`} />
+      )}
+
+      {/* Hemant Jain Value Swing Tab */}
+      {activeTab === 'hemant' && (
+        <HemantSwingStrategy key={`hemant-${refreshKey}`} />
       )}
 
       {/* Stock Screener Tab */}

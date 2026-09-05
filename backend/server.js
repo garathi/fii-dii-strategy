@@ -103,6 +103,7 @@ app.post('/api/refresh-all-rates', async (req, res) => {
     await runPythonScript('fetch_real_live_quotes.py');
     await runPythonScript('live_nifty500_screener.py');
     await runPythonScript('scan_inr_currency_triple.py');
+    await runPythonScript('scan_hemant_swing.py');
     res.json({ success: true, message: 'Live market rates refreshed across all strategy tabs!', timestamp: new Date().toISOString() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -149,6 +150,20 @@ app.get('/api/fii-dii/stocks', (req, res) => {
       },
       timestamp: new Date().toISOString()
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- API ENDPOINT: Hemant Swing Strategy ---
+app.get('/api/screener/hemant-swing', (req, res) => {
+  try {
+    const dataPath = path.join(__dirname, 'hemant_swing_signals.json');
+    if (!fs.existsSync(dataPath)) {
+      return res.json({ stocks: [], timestamp: new Date().toISOString(), warning: 'Python engine still syncing...' });
+    }
+    const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    res.json(data);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -287,6 +302,7 @@ cron.schedule('0 * * * *', async () => {
   await runPythonScript('fetch_real_live_quotes.py');
   await runPythonScript('live_nifty500_screener.py');
   await runPythonScript('scan_inr_currency_triple.py');
+  await runPythonScript('scan_hemant_swing.py');
   
   try {
     const data = await getFiiDiiToday();
