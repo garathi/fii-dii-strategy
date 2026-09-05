@@ -5,6 +5,7 @@ import Loader from './Loader';
 export default function HemantSwingStrategy() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState('all'); // 'all', 'value', 'knox'
 
   const fetchSignals = async () => {
     try {
@@ -50,6 +51,31 @@ export default function HemantSwingStrategy() {
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
+          
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <button 
+              className={`btn-secondary ${filterType === 'all' ? 'btn-primary' : ''}`} 
+              onClick={() => setFilterType('all')}
+              style={{ fontSize: '0.85rem', padding: '0.4rem 1rem' }}
+            >
+              All Tracked Stocks
+            </button>
+            <button 
+              className={`btn-secondary ${filterType === 'value' ? 'btn-primary' : ''}`} 
+              onClick={() => setFilterType('value')}
+              style={{ fontSize: '0.85rem', padding: '0.4rem 1rem', borderColor: filterType === 'value' ? '#38bdf8' : '', background: filterType === 'value' ? 'rgba(56, 189, 248, 0.1)' : '' }}
+            >
+              📉 In Value Zone (Envelope)
+            </button>
+            <button 
+              className={`btn-secondary ${filterType === 'knox' ? 'btn-primary' : ''}`} 
+              onClick={() => setFilterType('knox')}
+              style={{ fontSize: '0.85rem', padding: '0.4rem 1rem', borderColor: filterType === 'knox' ? '#8b5cf6' : '', background: filterType === 'knox' ? 'rgba(139, 92, 246, 0.1)' : '' }}
+            >
+              🚀 RB Knox Divergence
+            </button>
+          </div>
+
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
@@ -65,7 +91,21 @@ export default function HemantSwingStrategy() {
               </tr>
             </thead>
             <tbody>
-              {data.stocks.map((stock, i) => (
+              {data.stocks.filter(stock => {
+                if (filterType === 'value') return stock.isEnvPullback;
+                if (filterType === 'knox') return stock.isKnoxDiv;
+                return true;
+              }).length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                    No stocks found matching this strict criteria today.
+                  </td>
+                </tr>
+              ) : data.stocks.filter(stock => {
+                if (filterType === 'value') return stock.isEnvPullback;
+                if (filterType === 'knox') return stock.isKnoxDiv;
+                return true;
+              }).map((stock, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: stock.isQualified ? 'rgba(16, 185, 129, 0.05)' : 'transparent' }}>
                   <td style={{ padding: '1rem' }}>
                     <div style={{ fontWeight: 700, color: '#fff' }}>{stock.cleanSymbol}</div>
