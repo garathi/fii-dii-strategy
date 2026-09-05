@@ -132,17 +132,15 @@ def generate_hemant_swing_signals():
                 "macdBullish": is_macd_bullish,
                 "envLower": round(env_lower, 2),
                 "isEnvPullback": is_envelope_pullback,
-                "isQualified": qualified,
+                "isTechnicalQualified": qualified,
+                "isQualified": False, # Will be determined after fundamental scan
+                "ttmProfitCr": 0,
                 "scannedAt": pd.Timestamp.now().strftime('%d %b %Y %H:%M')
             }
-            # To avoid cluttering the UI with 200 failed stocks, only add qualified or nearly-qualified stocks
-            # (e.g. at least uptrend + RSI pullback)
+            # To avoid cluttering the UI with 200 failed stocks, only add nearly-qualified stocks
             if is_uptrend and is_rsi_pullback:
                 results.append(stock_obj)
             
-            if qualified:
-                print(f"  ✅ QUALIFIED {sym}: CMP ₹{cmp_val} | RSI {rsi} | VolSpike {vol_spike_ratio}x")
-
         except Exception as e:
             # Silent continue for missing individual tickers in batch
             continue
@@ -150,6 +148,27 @@ def generate_hemant_swing_signals():
     if not results:
         print("⚠️ CRITICAL: Yahoo Finance returned empty data (Rate Limited). Aborting save.")
         sys.exit(1)
+        
+    print(f"\nFetching Fundamental Data (TTM Net Profit > 200 Cr) for {len(results)} technically filtered stocks...")
+    for stock in results:
+        try:
+            ticker = yf.Ticker(stock["symbol"])
+            info = ticker.info
+            # 'netIncomeToCommon' is usually returned in INR (since it's an Indian stock)
+            net_income = info.get('netIncomeToCommon') or info.get('netIncome') or 0
+            
+            # Convert to Crores (1 Crore = 10,000,000)
+            profit_cr = round(net_income / 10000000, 2)
+            stock["ttmProfitCr"] = profit_cr
+            
+            # Final Qualification: Technicals + Fundamentals (Profit > 200 Cr)
+            if stock["isTechnicalQualified"] and profit_cr > 200:
+                stock["isQualified"] = True
+            
+            if stock["isQualified"]:
+                print(f"  ✅ FULLY QUALIFIED {stock['cleanSymbol']}: CMP ₹{stock['cmp']} | Profit: {profit_cr} Cr | RSI {stock['rsi']}")
+        except:
+            stock["ttmProfitCr"] = 0
 
     # Sort qualified first
     results.sort(key=lambda x: (not x['isQualified'], -x['volumeSpike']))

@@ -59,6 +59,7 @@ export default function HemantSwingStrategy() {
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>ENVELOPE (20 SMA - 5%)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>RSI PULLBACK (40-60)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>VOLUME SPIKE</th>
+                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>NET PROFIT (TTM)</th>
                 <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>STATUS</th>
               </tr>
             </thead>
@@ -93,6 +94,12 @@ export default function HemantSwingStrategy() {
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: stock.volumeSpike >= 1.5 ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
                       <BarChart2 size={14} /> {stock.volumeSpike}x Avg
                     </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ color: stock.ttmProfitCr > 200 ? '#34d399' : '#f87171', fontSize: '0.9rem', fontWeight: 600 }}>
+                      {stock.ttmProfitCr > 0 ? `₹${stock.ttmProfitCr} Cr` : 'N/A'}
+                    </span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Req: &gt; 200 Cr</div>
                   </td>
                   <td style={{ padding: '1rem' }}>
                     {stock.isQualified ? (
