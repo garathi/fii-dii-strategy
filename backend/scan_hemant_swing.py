@@ -9,25 +9,21 @@ import math
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-# Top 150 Liquid Nifty F&O Symbols for Swing Scanning
-NIFTY_SYMBOLS = [
-    "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE",
-    "ITC", "BHARTIARTL", "KOTAKBANK", "LT", "AXISBANK", "ASIANPAINT", "MARUTI", "SUNPHARMA",
-    "TITAN", "ULTRACEMCO", "TATUMOTORS", "BAJAJFINSV", "WIPRO", "NESTLEIND", "HCLTECH", "ONGC",
-    "ADANIENT", "NTPC", "JSWSTEEL", "POWERGRID", "M&M", "TATAAIG", "TATASTEEL", "COALINDIA",
-    "HINDALCO", "GRASIM", "TECHM", "CIPLA", "APOLLOHOSP", "DIVISLAB", "EICHERMOT", "BAJAJ-AUTO",
-    "BRITANNIA", "HEROMOTOCO", "INDUSINDBK", "DRREDDY", "HDFCLIFE", "SBILIFE", "BPCL", "UPL",
-    "HAL", "SOLARINDS", "POLYCAB", "MCX", "CDSL", "BSE", "PERSISTENT", "DIXON", "TRENT",
-    "BEL", "PIDILITIND", "SIEMENS", "GODREJCP", "CHOLAFIN", "PNB", "BANKBARODA", "ZOMATO",
-    "TVSMOTOR", "CUMMINSIND", "INDIGO", "SHREECEM", "HAVELLS", "PFC", "RECLTD", "GAIL",
-    "BOSCHLTD", "DLF", "AMBUJACEM", "ABB", "TORNTPHARM", "LODHA", "CGPOWER", "AUBANK",
-    "TATACOMM", "SRF", "MARICO", "COLPAL", "PAGEIND", "VOLTAS", "MOTHERSON", "MAXHEALTH",
-    "PETRONET", "MUTHOOTFIN", "TRENT", "ESCORTS", "PIIND", "NAUKRI", "MCDOWELL-N", "CONCOR",
-    "MRF", "ICICIPRULI", "ASTRAL", "AUROPHARMA", "LUPIN", "NMDC", "IGL", "MGL", "GUJGASLTD",
-    "BANDHANBNK", "FEDERALBNK", "IDFCFIRSTB", "CANBK", "UNIONBANK", "INDIANB", "PNB",
-    "SAIL", "VEDL", "JINDALSTEL", "TATACHEMICALS", "DEEPAKNTR", "NAVINFLUOR", "AARTIIND",
-    "TATAELXSI", "MPHASIS", "COFORGE", "LTIM", "PERSISTENT", "BSOFT", "LTTS"
-]
+import requests
+import io
+
+# Fetch Nifty 500 dynamically from NSE
+def get_nifty_500_symbols():
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        res = requests.get('https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv', headers=headers, timeout=10)
+        df = pd.read_csv(io.StringIO(res.text))
+        return df['Symbol'].tolist()
+    except Exception as e:
+        print(f"Failed to fetch Nifty 500 from NSE: {e}. Falling back to top 50.")
+        return ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE", "ITC", "BHARTIARTL"]
 
 def safe_float(val, fallback=0.0):
     try:
@@ -84,11 +80,12 @@ def calculate_macd(series, fast=12, slow=26, signal=9):
     return macd, macd_signal
 
 def generate_hemant_swing_signals():
-    print(f"--- SCANNING {len(NIFTY_SYMBOLS)} STOCKS FOR HEMANT JAIN VALUE SWING TRADES ---")
+    symbols = get_nifty_500_symbols()
+    print(f"--- SCANNING {len(symbols)} STOCKS FOR HEMANT JAIN VALUE SWING TRADES ---")
     results = []
     
     # De-duplicate
-    unique_symbols = list(set(NIFTY_SYMBOLS))
+    unique_symbols = list(set(symbols))
     yf_tickers = [sym + ".NS" for sym in unique_symbols]
     
     print("Downloading batch history data from Yahoo Finance...")
@@ -174,9 +171,8 @@ def generate_hemant_swing_signals():
                 "ttmProfitCr": 0,
                 "scannedAt": pd.Timestamp.now().strftime('%d %b %Y %H:%M')
             }
-            # To avoid cluttering the UI with 200 failed stocks, only add nearly-qualified stocks
-            # If it has Knoxville divergence, definitely add it even if trend failed!
-            if is_knox_div or (is_uptrend and is_rsi_pullback):
+            # To avoid cluttering the UI, only keep stocks that pass ALL technical checks OR have a Knox Div
+            if qualified or is_knox_div:
                 results.append(stock_obj)
             
         except Exception as e:
@@ -184,10 +180,11 @@ def generate_hemant_swing_signals():
             continue
 
     if not results:
-        print("⚠️ CRITICAL: Yahoo Finance returned empty data (Rate Limited). Aborting save.")
+        print("⚠️ CRITICAL: Yahoo Finance returned empty data or 0 stocks passed. Aborting save to preserve UI.")
         sys.exit(1)
         
     print(f"\nFetching Fundamental Data (TTM Net Profit > 200 Cr) for {len(results)} technically filtered stocks...")
+    final_output = []
     for stock in results:
         try:
             ticker = yf.Ticker(stock["symbol"])
@@ -203,19 +200,21 @@ def generate_hemant_swing_signals():
             if stock["isTechnicalQualified"] and profit_cr > 200:
                 stock["isQualified"] = True
             
-            if stock["isQualified"]:
-                print(f"  ✅ FULLY QUALIFIED {stock['cleanSymbol']}: CMP ₹{stock['cmp']} | Profit: {profit_cr} Cr | RSI {stock['rsi']}")
+            # Since the user requested strictly ONLY stocks that satisfy the criteria:
+            if stock["isQualified"] or stock["isKnoxDiv"]:
+                final_output.append(stock)
+                print(f"  ✅ ADDING TO UI {stock['cleanSymbol']}: CMP ₹{stock['cmp']} | Profit: {profit_cr} Cr | RSI {stock['rsi']}")
         except:
             stock["ttmProfitCr"] = 0
 
     # Sort qualified first
-    results.sort(key=lambda x: (not x['isQualified'], -x['volumeSpike']))
+    final_output.sort(key=lambda x: (not x['isQualified'], -x['volumeSpike']))
 
     output_path = os.path.join(os.path.dirname(__file__), 'hemant_swing_signals.json')
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump({"stocks": results, "timestamp": pd.Timestamp.now().isoformat()}, f, indent=2)
+        json.dump({"stocks": final_output, "timestamp": pd.Timestamp.now().isoformat()}, f, indent=2)
 
-    print(f"\n✓ Saved {len(results)} Stocks to hemant_swing_signals.json")
+    print(f"\n✓ Saved {len(final_output)} Stocks to hemant_swing_signals.json")
 
 if __name__ == "__main__":
     generate_hemant_swing_signals()
