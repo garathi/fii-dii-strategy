@@ -22,8 +22,25 @@ def get_nifty_500_symbols():
         df = pd.read_csv(io.StringIO(res.text))
         return df['Symbol'].tolist()
     except Exception as e:
-        print(f"Failed to fetch Nifty 500 from NSE: {e}. Falling back to top 50.")
-        return ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE", "ITC", "BHARTIARTL"]
+        print(f"Failed to fetch Nifty 500 from NSE: {e}. Falling back to hardcoded Top 150 Liquid F&O stocks.")
+        return [
+            "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE",
+            "ITC", "BHARTIARTL", "KOTAKBANK", "LT", "AXISBANK", "ASIANPAINT", "MARUTI", "SUNPHARMA",
+            "TITAN", "ULTRACEMCO", "TATUMOTORS", "BAJAJFINSV", "WIPRO", "NESTLEIND", "HCLTECH", "ONGC",
+            "ADANIENT", "NTPC", "JSWSTEEL", "POWERGRID", "M&M", "TATAAIG", "TATASTEEL", "COALINDIA",
+            "HINDALCO", "GRASIM", "TECHM", "CIPLA", "APOLLOHOSP", "DIVISLAB", "EICHERMOT", "BAJAJ-AUTO",
+            "BRITANNIA", "HEROMOTOCO", "INDUSINDBK", "DRREDDY", "HDFCLIFE", "SBILIFE", "BPCL", "UPL",
+            "HAL", "SOLARINDS", "POLYCAB", "MCX", "CDSL", "BSE", "PERSISTENT", "DIXON", "TRENT",
+            "BEL", "PIDILITIND", "SIEMENS", "GODREJCP", "CHOLAFIN", "PNB", "BANKBARODA", "ZOMATO",
+            "TVSMOTOR", "CUMMINSIND", "INDIGO", "SHREECEM", "HAVELLS", "PFC", "RECLTD", "GAIL",
+            "BOSCHLTD", "DLF", "AMBUJACEM", "ABB", "TORNTPHARM", "LODHA", "CGPOWER", "AUBANK",
+            "TATACOMM", "SRF", "MARICO", "COLPAL", "PAGEIND", "VOLTAS", "MOTHERSON", "MAXHEALTH",
+            "PETRONET", "MUTHOOTFIN", "TRENT", "ESCORTS", "PIIND", "NAUKRI", "MCDOWELL-N", "CONCOR",
+            "MRF", "ICICIPRULI", "ASTRAL", "AUROPHARMA", "LUPIN", "NMDC", "IGL", "MGL", "GUJGASLTD",
+            "BANDHANBNK", "FEDERALBNK", "IDFCFIRSTB", "CANBK", "UNIONBANK", "INDIANB", "PNB",
+            "SAIL", "VEDL", "JINDALSTEL", "TATACHEMICALS", "DEEPAKNTR", "NAVINFLUOR", "AARTIIND",
+            "TATAELXSI", "MPHASIS", "COFORGE", "LTIM", "PERSISTENT", "BSOFT", "LTTS"
+        ]
 
 def safe_float(val, fallback=0.0):
     try:
@@ -180,32 +197,28 @@ def generate_hemant_swing_signals():
             continue
 
     if not results:
-        print("⚠️ CRITICAL: Yahoo Finance returned empty data or 0 stocks passed. Aborting save to preserve UI.")
-        sys.exit(1)
-        
-    print(f"\nFetching Fundamental Data (TTM Net Profit > 200 Cr) for {len(results)} technically filtered stocks...")
-    final_output = []
-    for stock in results:
-        try:
-            ticker = yf.Ticker(stock["symbol"])
-            info = ticker.info
-            # 'netIncomeToCommon' is usually returned in INR (since it's an Indian stock)
-            net_income = info.get('netIncomeToCommon') or info.get('netIncome') or 0
-            
-            # Convert to Crores (1 Crore = 10,000,000)
-            profit_cr = round(net_income / 10000000, 2)
-            stock["ttmProfitCr"] = profit_cr
-            
-            # Final Qualification: Technicals + Fundamentals (Profit > 200 Cr)
-            if stock["isTechnicalQualified"] and profit_cr > 200:
-                stock["isQualified"] = True
-            
-            # Since the user requested strictly ONLY stocks that satisfy the criteria:
-            if stock["isQualified"] or stock["isKnoxDiv"]:
-                final_output.append(stock)
-                print(f"  ✅ ADDING TO UI {stock['cleanSymbol']}: CMP ₹{stock['cmp']} | Profit: {profit_cr} Cr | RSI {stock['rsi']}")
-        except:
-            stock["ttmProfitCr"] = 0
+        print("⚠️ 0 stocks passed technical filters today. Saving empty result array.")
+        final_output = []
+    else:
+        print(f"\nFetching Fundamental Data (TTM Net Profit > 200 Cr) for {len(results)} technically filtered stocks...")
+        final_output = []
+        for stock in results:
+            try:
+                ticker = yf.Ticker(stock["symbol"])
+                info = ticker.info
+                net_income = info.get('netIncomeToCommon') or info.get('netIncome') or 0
+                
+                profit_cr = round(net_income / 10000000, 2)
+                stock["ttmProfitCr"] = profit_cr
+                
+                if stock["isTechnicalQualified"] and profit_cr > 200:
+                    stock["isQualified"] = True
+                
+                if stock["isQualified"] or stock["isKnoxDiv"]:
+                    final_output.append(stock)
+                    print(f"  ✅ ADDING TO UI {stock['cleanSymbol']}: CMP ₹{stock['cmp']} | Profit: {profit_cr} Cr | RSI {stock['rsi']}")
+            except:
+                stock["ttmProfitCr"] = 0
 
     # Sort qualified first
     final_output.sort(key=lambda x: (not x['isQualified'], -x['volumeSpike']))
