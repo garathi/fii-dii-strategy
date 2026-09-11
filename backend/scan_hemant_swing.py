@@ -9,20 +9,18 @@ import math
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
+import os
 import requests
 import io
 
-# Fetch Nifty 500 dynamically from NSE
+# Fetch Nifty 500 statically from local CSV to avoid NSE IP bans on Render
 def get_nifty_500_symbols():
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        res = requests.get('https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv', headers=headers, timeout=10)
-        df = pd.read_csv(io.StringIO(res.text))
+        csv_path = os.path.join(os.path.dirname(__file__), 'nifty500list.csv')
+        df = pd.read_csv(csv_path)
         return df['Symbol'].tolist()
     except Exception as e:
-        print(f"Failed to fetch Nifty 500 from NSE: {e}. Falling back to hardcoded Top 150 Liquid F&O stocks.")
+        print(f"Failed to read local Nifty 500 CSV: {e}. Falling back to hardcoded Top 150 Liquid F&O stocks.")
         return [
             "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "HINDUNILVR", "SBIN", "BAJFINANCE",
             "ITC", "BHARTIARTL", "KOTAKBANK", "LT", "AXISBANK", "ASIANPAINT", "MARUTI", "SUNPHARMA",
