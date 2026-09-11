@@ -74,9 +74,9 @@ function runPythonScript(scriptName) {
       return resolve(false); 
     }
     
-    exec(`${PYTHON_BIN} "${scriptPath}"`, { encoding: 'utf-8', timeout: 60000 }, (error, stdout, stderr) => {
+    exec(`${PYTHON_BIN} "${scriptPath}"`, { encoding: 'utf-8', timeout: 300000, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
       if (error) {
-        console.error(`⚠️  Error running ${scriptName}: ${error.message.substring(0, 200)}`);
+        console.error(`⚠️  Error running ${scriptName}: ${error.message.substring(0, 500)}`);
         return resolve(false);
       }
       console.log(`✓ [Python] ${scriptName} done`);

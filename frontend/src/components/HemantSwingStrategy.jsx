@@ -46,7 +46,15 @@ export default function HemantSwingStrategy() {
       ) : !data || !data.stocks ? (
         <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
           <p style={{ color: 'var(--text-secondary)' }}>
-            {data?.warning || "Error loading strategy data."}
+            Error loading strategy data.
+          </p>
+        </div>
+      ) : data.warning ? (
+        <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+          <Activity size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
+          <h3 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '0.5rem' }}>Engine Syncing</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {data.warning}
           </p>
         </div>
       ) : data.stocks.length === 0 ? (
@@ -54,7 +62,7 @@ export default function HemantSwingStrategy() {
           <TrendingUp size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
           <h3 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '0.5rem' }}>Scan Completed: 0 Stocks Found</h3>
           <p style={{ color: 'var(--text-secondary)' }}>
-            {data.warning || "The Python engine successfully scanned all 501 Nifty stocks, but zero companies met the strict Hemant Jain technical and fundamental requirements today."}
+            The Python engine successfully scanned all 501 Nifty stocks, but zero companies met the strict Hemant Jain technical and fundamental requirements today.
           </p>
         </div>
       ) : (
